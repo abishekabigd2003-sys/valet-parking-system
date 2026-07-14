@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-bg: #FFFFFF;
+    --color-bg-paper: #F8FAFC;
+    --color-text-primary: #111827;
+    --color-text-secondary: #6B7280;
+    --color-border: #E5E7EB;
+  }
+
+  .dark {
+    --color-bg: #0B0B0B;
+    --color-bg-paper: #1A1A1A;
+    --color-text-primary: #F3F4F6;
+    --color-text-secondary: #9CA3AF;
+    --color-border: rgba(255, 255, 255, 0.1);
+  }
+
+  body {
+    @apply bg-background text-themeText font-sans antialiased transition-colors duration-300;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 dark:bg-black/50 backdrop-blur-lg border border-themeBorder shadow-xl transition-colors duration-300;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  @apply bg-gray-100 dark:bg-[#111827] transition-colors duration-300;
+}
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300 dark:bg-[#374151] rounded transition-colors duration-300;
+}
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-gray-400 dark:bg-[#4B5563];
+}
+
+/* Loader Animations */
+@keyframes spinWheel {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+.wheel {
+  animation: spinWheel 0.6s linear infinite;
+}
+
+@keyframes engineVibration {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-2px); }
+}
+.car-container {
+  animation: engineVibration 0.3s ease-in-out infinite;
+}
+
+@keyframes moveSpeedLine {
+  0% { transform: translateX(100px); opacity: 0; }
+  20% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { transform: translateX(-150px); opacity: 0; }
+}
+.speed-line {
+  animation: moveSpeedLine 1s linear infinite;
+}
+.speed-line:nth-child(1) { animation-duration: 0.8s; animation-delay: 0.1s; }
+.speed-line:nth-child(2) { animation-duration: 1.2s; animation-delay: 0.4s; }
+.speed-line:nth-child(3) { animation-duration: 0.9s; animation-delay: 0.2s; }
+
+@keyframes headlightPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+.headlight-beam {
+  animation: headlightPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotBlink {
+  0%, 20% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
+}
+.dot-1 { animation: dotBlink 1.5s infinite; animation-delay: 0s; }
+.dot-2 { animation: dotBlink 1.5s infinite; animation-delay: 0.2s; }
+.dot-3 { animation: dotBlink 1.5s infinite; animation-delay: 0.4s; }

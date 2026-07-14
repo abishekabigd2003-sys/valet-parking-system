@@ -1,0 +1,75 @@
+/* Page-level styles for Home — utility-first Tailwind handles layout/spacing;
+   this file covers effects that are awkward or repetitive as inline classes. */
+
+.home-page {
+  --scrollbar-track: #141414;
+  --scrollbar-thumb: #FFC107;
+}
+
+/* Custom scrollbar matching the accent palette */
+.home-page {
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+.home-page::-webkit-scrollbar {
+  width: 10px;
+}
+
+.home-page::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+}
+
+.home-page::-webkit-scrollbar-thumb {
+  background-color: var(--scrollbar-thumb);
+  border-radius: 999px;
+  border: 2px solid var(--scrollbar-track);
+}
+
+.home-page::-webkit-scrollbar-thumb:hover {
+  background-color: #FFD24D;
+}
+
+/* Soft vertical fade between stacked sections so borders don't feel abrupt */
+.home-page main > section + section {
+  position: relative;
+}
+
+.home-page main > section + section::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent,
+    rgba(255, 193, 7, 0.15) 50%,
+    transparent
+  );
+  pointer-events: none;
+}
+
+/* Anchor offset so in-page nav links don't tuck content under the sticky navbar */
+.home-page :target,
+.home-page section[id] {
+  scroll-margin-top: 5rem;
+}
+
+/* Subtle parallax-friendly grain layer used behind all sections */
+.home-page .bg-grain {
+  mix-blend-mode: overlay;
+}
+
+/* Print styles: strip decorative backgrounds, keep content legible */
+@media print {
+  .home-page {
+    background: #ffffff !important;
+    color: #000000 !important;
+  }
+
+  .home-page .bg-grain,
+  .home-page nav,
+  .home-page footer {
+    display: none !important;
+  }
+}

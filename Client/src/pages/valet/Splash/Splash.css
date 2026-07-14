@@ -1,0 +1,440 @@
+/* ==========================================================================
+   Splash — full-screen hero with horizontal booking bar
+   Plain CSS (no Tailwind) so this page can be dropped into any React app.
+   ========================================================================== */
+
+.splash {
+  --black: #0B0B0B;
+  --panel: #141414cc;
+  --line: rgba(245, 245, 240, 0.14);
+  --yellow: #FFC107;
+  --yellow-glow: #FFD24D;
+  --white: #F5F5F0;
+  --muted: #A8A8A2;
+  --faint: #6E6E68;
+  --radius: 4px;
+
+  position: relative;
+  min-height: 100vh;
+  min-height: 100svh;
+  overflow: hidden;
+  color: var(--white);
+  font-family: 'Inter', system-ui, sans-serif;
+}
+
+/* ---------- Background ---------- */
+
+.splash__backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.splash__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.splash__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(11, 11, 11, 0.55) 0%, rgba(11, 11, 11, 0.35) 40%, rgba(11, 11, 11, 0.92) 100%),
+    linear-gradient(90deg, rgba(11, 11, 11, 0.75) 0%, transparent 55%);
+}
+
+/* ---------- Navbar ---------- */
+
+.splash-nav {
+  position: relative;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  padding: 1.75rem clamp(1.25rem, 4vw, 4rem) 0;
+}
+
+.splash-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  text-decoration: none;
+}
+
+.splash-nav__mark {
+  display: grid;
+  place-items: center;
+  width: 2.1rem;
+  height: 2.1rem;
+  border-radius: var(--radius);
+  background: var(--yellow);
+  color: var(--black);
+}
+
+.splash-nav__wordmark {
+  font-family: 'Big Shoulders Display', sans-serif;
+  font-weight: 700;
+  font-size: 1.35rem;
+  letter-spacing: 0.02em;
+  color: var(--white);
+  text-transform: uppercase;
+}
+
+.splash-nav__wordmark span {
+  color: var(--yellow);
+}
+
+.splash-nav__links {
+  display: none;
+  align-items: center;
+  gap: 2.25rem;
+}
+
+.splash-nav__link {
+  position: relative;
+  padding-bottom: 0.4rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.splash-nav__link:hover {
+  color: var(--white);
+}
+
+.splash-nav__link.is-active {
+  color: var(--yellow);
+}
+
+.splash-nav__link.is-active::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 2px;
+  background: var(--yellow);
+}
+
+.splash-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.splash-nav__login {
+  display: none;
+}
+
+.splash-nav__burger {
+  display: grid;
+  place-items: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  background: transparent;
+  border: none;
+  color: var(--white);
+  cursor: pointer;
+}
+
+.splash-nav__mobile {
+  position: absolute;
+  top: calc(100% + 1rem);
+  right: clamp(1.25rem, 4vw, 4rem);
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  min-width: 200px;
+  padding: 1rem;
+  background: rgba(11, 11, 11, 0.96);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  backdrop-filter: blur(12px);
+}
+
+.splash-nav__mobile-link {
+  padding: 0.65rem 0.25rem;
+  font-family: 'Big Shoulders Display', sans-serif;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  color: var(--white);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+}
+
+.splash-nav__mobile-link:last-of-type {
+  border-bottom: none;
+}
+
+.splash-nav__mobile .splash-btn {
+  margin-top: 0.5rem;
+}
+
+@media (min-width: 900px) {
+  .splash-nav__links {
+    display: flex;
+  }
+
+  .splash-nav__login {
+    display: inline-flex;
+  }
+
+  .splash-nav__burger {
+    display: none;
+  }
+}
+
+/* ---------- Buttons ---------- */
+
+.splash-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.5rem;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 700;
+  border-radius: var(--radius);
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+}
+
+.splash-btn:active {
+  transform: scale(0.97);
+}
+
+.splash-btn--solid {
+  background: var(--yellow);
+  color: var(--black);
+}
+
+.splash-btn--solid:hover {
+  background: var(--yellow-glow);
+  box-shadow: 0 0 20px rgba(255, 193, 7, 0.3);
+}
+
+.splash-btn--outline {
+  background: transparent;
+  border-color: rgba(245, 245, 240, 0.3);
+  color: var(--white);
+}
+
+.splash-btn--outline:hover {
+  border-color: var(--yellow);
+  color: var(--yellow);
+}
+
+.splash-spin {
+  animation: splash-spin 0.8s linear infinite;
+}
+
+@keyframes splash-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------- Hero ---------- */
+
+.splash-hero {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 1rem;
+  min-height: calc(100svh - 5.5rem);
+  padding: 2rem clamp(1.25rem, 4vw, 4rem) 3rem;
+}
+
+.splash-hero__eyebrow {
+  font-size: 0.95rem;
+  color: var(--white);
+  margin: 0;
+}
+
+.splash-hero__title {
+  margin: 0;
+  font-family: 'Big Shoulders Display', sans-serif;
+  font-weight: 800;
+  text-transform: uppercase;
+  line-height: 0.95;
+  font-size: clamp(2.75rem, 8vw, 5rem);
+  color: var(--white);
+}
+
+.splash-hero__title-accent {
+  color: var(--yellow);
+}
+
+.splash-hero__subtitle {
+  max-width: 34rem;
+  margin: 0;
+  font-size: clamp(0.95rem, 1.4vw, 1.05rem);
+  line-height: 1.6;
+  color: var(--muted);
+}
+
+/* ---------- Booking bar ---------- */
+
+.splash-book {
+  margin-top: 2.5rem;
+  padding: 1.75rem clamp(1.25rem, 3vw, 2.5rem) 1.5rem;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  backdrop-filter: blur(18px);
+  box-shadow: 0 25px 60px -20px rgba(0, 0, 0, 0.75);
+}
+
+.splash-book__title {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-family: 'Big Shoulders Display', sans-serif;
+  font-size: 1.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--yellow);
+}
+
+.splash-book__fields {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  align-items: end;
+}
+
+@media (min-width: 900px) {
+  .splash-book__fields {
+    grid-template-columns: 1.4fr 1.3fr 1.3fr 1fr auto;
+    gap: 1rem;
+  }
+}
+
+.splash-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+
+.splash-field__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--yellow);
+}
+
+.splash-field__label em {
+  font-style: normal;
+  color: var(--faint);
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.splash-field__row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.splash-field__control {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1;
+  height: 2.9rem;
+  padding: 0 0.9rem;
+  background: rgba(11, 11, 11, 0.6);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  transition: border-color 0.2s ease;
+}
+
+.splash-field__control:focus-within {
+  border-color: var(--yellow);
+}
+
+.splash-field__control--time {
+  flex: 0 0 auto;
+  width: 7.5rem;
+}
+
+.splash-field__icon {
+  flex: none;
+  margin-right: 0.55rem;
+  color: var(--faint);
+}
+
+.splash-field__chevron {
+  flex: none;
+  margin-left: 0.4rem;
+  color: var(--faint);
+  pointer-events: none;
+}
+
+.splash-field__control select,
+.splash-field__control input {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: var(--white);
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  appearance: none;
+}
+
+.splash-field__control select option {
+  background: var(--black);
+  color: var(--white);
+}
+
+.splash-field__control input::-webkit-calendar-picker-indicator {
+  filter: invert(0.7) sepia(1) saturate(4) hue-rotate(0deg);
+  cursor: pointer;
+}
+
+.splash-field__control input::placeholder {
+  color: var(--faint);
+}
+
+.splash-book__submit {
+  height: 2.9rem;
+  padding-inline: 1.75rem;
+  white-space: nowrap;
+}
+
+.splash-book__status {
+  min-height: 1.2rem;
+  margin-top: 1rem;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.75rem;
+}
+
+.splash-book__status .is-error {
+  color: #f87171;
+}
+
+.splash-book__status .is-success {
+  color: #34d399;
+}
+
+/* ---------- Reduced motion ---------- */
+
+@media (prefers-reduced-motion: reduce) {
+  .splash * {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
+}
