@@ -207,8 +207,24 @@ VITE_API_URL="http://localhost:5000/api"
 
 This project is fully automated for Continuous Integration and Continuous Deployment (CI/CD) via **GitHub Actions**. Every push to the `main` branch will automatically deploy the Backend to Render and the Frontend to Vercel, provided the CI tests pass.
 
-### 1. Backend Deployment (Render)
-The backend is deployed as a Web Service on Render using the `render.yaml` Blueprint.
+### 1. Backend Deployment (Render) & MongoDB Atlas Migration
+The backend is deployed as a Web Service on Render using the `render.yaml` Blueprint. Render requires a cloud database (MongoDB Atlas) to function.
+
+#### 1a. Migrate Local Data to MongoDB Atlas
+If you have data in your local MongoDB that you want to preserve (like Admin users):
+1. Create a free cluster on [MongoDB Atlas](https://www.mongodb.com/atlas/database).
+2. Go to **Network Access** and add IP Address `0.0.0.0/0` (Allow access from anywhere).
+3. Go to **Database Access** and create a user.
+4. Click **Connect > Drivers**, and copy your connection string (`mongodb+srv://...`).
+5. Open your `server/.env` file and paste the string into `MONGO_URI_ATLAS`.
+6. Run the migration script to seamlessly copy your local data to Atlas:
+   ```bash
+   cd server
+   node scripts/migrate_to_atlas.js
+   ```
+7. Once complete, change your `MONGO_URI` in `server/.env` to the Atlas connection string permanently.
+
+#### 1b. Deploy to Render
 
 1. Create an account on [Render](https://render.com/).
 2. Click **New +** > **Blueprint**.
