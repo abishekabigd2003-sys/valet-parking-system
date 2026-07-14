@@ -66,10 +66,10 @@ jobs:
         working-directory: ./server
         run: |
           npm start &
-          npx wait-on tcp:5001 -t 30000
+          npx --yes wait-on tcp:127.0.0.1:5001 -t 30000
         env:
           PORT: 5001
-          MONGO_URI: mongodb://localhost:27017/valet-test
+          MONGO_URI: mongodb://127.0.0.1:27017/valet-test
           JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret' }}
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID || 'test_project' }}
           FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL || 'test@example.com' }}
@@ -79,4 +79,5 @@ jobs:
         working-directory: ./server
         run: node e2e_test.js
         env:
-          MONGO_URI: mongodb://localhost:27017/valet-test
+          PORT: 5001
+          MONGO_URI: mongodb://127.0.0.1:27017/valet-test

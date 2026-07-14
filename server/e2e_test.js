@@ -4,7 +4,8 @@ const jwt = require('jsonwebtoken');
 
 dotenv.config();
 
-const BASE_URL = 'http://localhost:5001/api';
+const PORT = process.env.PORT || 5001;
+const BASE_URL = `http://127.0.0.1:${PORT}/api`;
 
 async function request(endpoint, options = {}) {
   const url = `${BASE_URL}${endpoint}`;
