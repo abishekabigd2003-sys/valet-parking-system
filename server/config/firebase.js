@@ -1,14 +1,28 @@
-const { initializeApp, applicationDefault, getApps } = require('firebase-admin/app');
+const { initializeApp, cert } = require('firebase-admin/app');
 const { getAuth } = require('firebase-admin/auth');
 
 try {
   if (getApps().length === 0) {
-    initializeApp({
-      // We will use standard application default credentials.
-      // Make sure to set GOOGLE_APPLICATION_CREDENTIALS in .env pointing to your service account JSON file
-      credential: applicationDefault(), 
-    });
-    console.log('Firebase Admin SDK initialized successfully');
+    if (process.env.FIREBASE_PROJECT_ID && process.env.FIREBASE_PRIVATE_KEY && process.env.FIREBASE_CLIENT_EMAIL) {
+      // Use individual environment variables (Best for Render/Vercel)
+      const serviceAccount = {
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        // Replace escaped newline characters from the env variable
+        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+      };
+      initializeApp({
+        credential: cert(serviceAccount)
+      });
+      console.log('Firebase Admin SDK initialized successfully via Environment Variables');
+    } else {
+      // Fallback for local development if GOOGLE_APPLICATION_CREDENTIALS is set
+      const { applicationDefault } = require('firebase-admin/app');
+      initializeApp({
+        credential: applicationDefault(), 
+      });
+      console.log('Firebase Admin SDK initialized via Application Default Credentials');
+    }
   }
 } catch (error) {
   console.error('Firebase Admin SDK initialization error:', error);
