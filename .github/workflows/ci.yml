@@ -64,7 +64,9 @@ jobs:
 
       - name: Start Backend Server
         working-directory: ./server
-        run: npm start &
+        run: |
+          npm start &
+          npx wait-on tcp:5001 -t 30000
         env:
           PORT: 5001
           MONGO_URI: mongodb://localhost:27017/valet-test
@@ -72,9 +74,6 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID || 'test_project' }}
           FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL || 'test@example.com' }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY || 'test_key' }}
-
-      - name: Wait for Server to Start
-        run: sleep 5
 
       - name: Run End-to-End Tests
         working-directory: ./server

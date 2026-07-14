@@ -1,14 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Menu, X, Sun, Moon } from 'lucide-react';
+import { Menu, X } from 'lucide-react';
 import { cn } from '../../utils/cn';
 import { Button } from '../Button';
-import { useTheme } from '../../context/ThemeContext';
 
 const Navbar = () => {
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { isDarkMode, toggleTheme } = useTheme();
 
   useEffect(() => {
     // Scroll state not needed anymore since navbar is always solid, but keeping listener if needed later or removing it

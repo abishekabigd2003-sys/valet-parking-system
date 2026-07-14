@@ -1,13 +1,12 @@
 name: Continuous Deployment
 
 on:
-  push:
-    branches:
-      - main
   workflow_run:
     workflows: ["CI Pipeline"]
     types:
       - completed
+    branches:
+      - main
 
 jobs:
   deploy:
