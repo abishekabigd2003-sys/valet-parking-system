@@ -203,41 +203,73 @@ VITE_API_URL="http://localhost:5000/api"
 
 ---
 
-## ⚙️ CI/CD Setup Guide
+## ⚙️ Continuous Deployment (CD) Setup Guide
 
-This project is configured with a fully automated CI/CD pipeline using **GitHub Actions**.
+This project is fully automated for Continuous Integration and Continuous Deployment (CI/CD) via **GitHub Actions**. Every push to the `main` branch will automatically deploy the Backend to Render and the Frontend to Vercel, provided the CI tests pass.
 
-### How It Works
-1. **Continuous Integration (CI)**: On every push or pull request, GitHub Actions automatically:
-   - Installs all dependencies for both Frontend and Backend.
-   - Runs `eslint` and verifies the React build.
-   - Spins up a temporary MongoDB Docker container.
-   - Boots up the Backend server and executes the full **End-to-End Test Suite** (`e2e_test.js`).
-2. **Continuous Deployment (CD)**: On every successful push to the `main` branch (after CI passes):
-   - GitHub triggers a **Vercel Deploy Hook** to deploy the Frontend.
-   - GitHub triggers a **Render Deploy Hook** to deploy the Backend.
+### 1. Backend Deployment (Render)
+The backend is deployed as a Web Service on Render using the `render.yaml` Blueprint.
 
-### Configuration Instructions
+1. Create an account on [Render](https://render.com/).
+2. Click **New +** > **Blueprint**.
+3. Connect your GitHub repository.
+4. Render will automatically detect the `render.yaml` file and configure the service (Root Dir: `server`, Build: `npm install`, Start: `npm start`).
+5. **Environment Variables**: In the Render Dashboard for your new Web Service, go to **Environment** and set the following required variables:
+   - `MONGO_URI`: Your MongoDB Atlas Connection String.
+   - `JWT_SECRET`: A strong random string for JWT signing.
+   - `FIREBASE_PROJECT_ID`: From Firebase Console.
+   - `FIREBASE_CLIENT_EMAIL`: From Firebase Service Account.
+   - `FIREBASE_PRIVATE_KEY`: From Firebase Service Account (Ensure line breaks `\n` are handled properly).
+   - `CLIENT_URL`: The production URL of your Vercel frontend (e.g., `https://your-frontend.vercel.app`).
+6. Go to **Settings > Deploy Hook** and copy the webhook URL.
 
-To enable automatic deployments, you must configure the following **GitHub Repository Secrets** (`Settings > Secrets and variables > Actions`):
+### 2. Frontend Deployment (Vercel)
+The frontend is a React SPA built with Vite. It requires a `vercel.json` file for proper routing, which is already included.
 
-#### 1. Deployment Hooks
-- `VERCEL_DEPLOY_HOOK`: Create a Deploy Hook in your Vercel Project Settings (Git > Deploy Hooks).
-- `RENDER_DEPLOY_HOOK`: Create a Deploy Hook in your Render Web Service Settings (Settings > Deploy Hook).
+1. Create an account on [Vercel](https://vercel.com/).
+2. Click **Add New...** > **Project** and import your GitHub repository.
+3. Configure the Project:
+   - **Framework Preset**: Vite
+   - **Root Directory**: `Client`
+   - **Build Command**: `npm run build`
+4. **Environment Variables**: Add the following in the Vercel Dashboard:
+   - `VITE_FIREBASE_API_KEY`
+   - `VITE_FIREBASE_AUTH_DOMAIN`
+   - `VITE_FIREBASE_PROJECT_ID`
+   - `VITE_FIREBASE_STORAGE_BUCKET`
+   - `VITE_FIREBASE_MESSAGING_SENDER_ID`
+   - `VITE_FIREBASE_APP_ID`
+   - `VITE_API_URL`: The production URL of your Render backend (e.g., `https://valet-parking-backend.onrender.com/api`).
+5. Go to **Settings > Git > Deploy Hooks**, create a hook named "GitHub Actions", and copy the URL.
 
-#### 2. Application Secrets (For CI Tests & Build)
+### 3. GitHub Actions Configuration (Automatic Deployment)
+To securely trigger deployments only when the CI pipeline passes, configure the following **GitHub Repository Secrets** (`Settings > Secrets and variables > Actions`):
+
+#### Deployment Hooks (Required for CD)
+- `VERCEL_DEPLOY_HOOK`: Paste the webhook URL from Vercel.
+- `RENDER_DEPLOY_HOOK`: Paste the webhook URL from Render.
+
+#### Application Secrets (Required for CI Testing)
+These secrets are required so the GitHub Actions environment can run the automated tests against real Firebase APIs before deploying.
 - `FIREBASE_API_KEY`
 - `FIREBASE_AUTH_DOMAIN`
 - `FIREBASE_PROJECT_ID`
 - `FIREBASE_STORAGE_BUCKET`
 - `FIREBASE_MESSAGING_SENDER_ID`
 - `FIREBASE_APP_ID`
-- `VITE_API_URL`
-- `JWT_SECRET`
+- `VITE_API_URL`: Use `http://127.0.0.1:5001/api` for the GitHub Actions environment.
+- `JWT_SECRET`: Any random string (e.g. `test_jwt_secret`).
 - `FIREBASE_CLIENT_EMAIL`
 - `FIREBASE_PRIVATE_KEY`
 
-*Note: The CI testing pipeline spins up its own local MongoDB instance automatically, so you do not need to provide a `MONGO_URI` secret for GitHub Actions unless you wish to test against Atlas directly.*
+*Note: The CI pipeline spins up its own local MongoDB instance automatically, so you do not need to provide a `MONGO_URI` secret for GitHub Actions.*
+
+### 4. Post-Deployment Verification
+Once the pipeline deploys your application, manually verify the following in the live environment:
+1. **Authentication**: Sign in to the Customer and Admin portals.
+2. **WebSockets**: Ensure real-time slot updates work without CORS errors.
+3. **Database**: Create a test check-in and verify it appears in your MongoDB Atlas dashboard.
+4. **Routing**: Refresh the `/admin/dashboard` page on Vercel to ensure SPA rewrites are working correctly (no 404s).
 
 ---
 
