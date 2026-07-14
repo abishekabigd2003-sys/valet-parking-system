@@ -203,6 +203,44 @@ VITE_API_URL="http://localhost:5000/api"
 
 ---
 
+## ⚙️ CI/CD Setup Guide
+
+This project is configured with a fully automated CI/CD pipeline using **GitHub Actions**.
+
+### How It Works
+1. **Continuous Integration (CI)**: On every push or pull request, GitHub Actions automatically:
+   - Installs all dependencies for both Frontend and Backend.
+   - Runs `eslint` and verifies the React build.
+   - Spins up a temporary MongoDB Docker container.
+   - Boots up the Backend server and executes the full **End-to-End Test Suite** (`e2e_test.js`).
+2. **Continuous Deployment (CD)**: On every successful push to the `main` branch (after CI passes):
+   - GitHub triggers a **Vercel Deploy Hook** to deploy the Frontend.
+   - GitHub triggers a **Render Deploy Hook** to deploy the Backend.
+
+### Configuration Instructions
+
+To enable automatic deployments, you must configure the following **GitHub Repository Secrets** (`Settings > Secrets and variables > Actions`):
+
+#### 1. Deployment Hooks
+- `VERCEL_DEPLOY_HOOK`: Create a Deploy Hook in your Vercel Project Settings (Git > Deploy Hooks).
+- `RENDER_DEPLOY_HOOK`: Create a Deploy Hook in your Render Web Service Settings (Settings > Deploy Hook).
+
+#### 2. Application Secrets (For CI Tests & Build)
+- `FIREBASE_API_KEY`
+- `FIREBASE_AUTH_DOMAIN`
+- `FIREBASE_PROJECT_ID`
+- `FIREBASE_STORAGE_BUCKET`
+- `FIREBASE_MESSAGING_SENDER_ID`
+- `FIREBASE_APP_ID`
+- `VITE_API_URL`
+- `JWT_SECRET`
+- `FIREBASE_CLIENT_EMAIL`
+- `FIREBASE_PRIVATE_KEY`
+
+*Note: The CI testing pipeline spins up its own local MongoDB instance automatically, so you do not need to provide a `MONGO_URI` secret for GitHub Actions unless you wish to test against Atlas directly.*
+
+---
+
 ## 🔮 Future Enhancements
 - 📱 Native Mobile Application (React Native).
 - 🔔 SMS / Push Notifications for vehicle retrieval status.
