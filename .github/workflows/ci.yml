@@ -22,7 +22,7 @@ jobs:
 
       - name: Install Frontend Dependencies
         working-directory: ./Client
-        run: npm ci
+        run: npm install
 
       - name: Run ESLint
         working-directory: ./Client
@@ -60,13 +60,13 @@ jobs:
 
       - name: Install Backend Dependencies
         working-directory: ./server
-        run: npm ci
+        run: npm install
 
       - name: Start Backend Server
         working-directory: ./server
         run: |
           npm start &
-          npx --yes wait-on tcp:127.0.0.1:5001 -t 30000
+          npx --yes wait-on http://127.0.0.1:5001/ -t 30000
         env:
           PORT: 5001
           MONGO_URI: mongodb://127.0.0.1:27017/valet-test
