@@ -49,15 +49,10 @@ jobs:
         image: mongo:7.0
         ports:
           - 27017:27017
-        options: >-
-          --health-cmd "mongosh --eval 'db.adminCommand({ping:1})' --quiet"
-          --health-interval 10s
-          --health-timeout 10s
-          --health-retries 6
-          --health-start-period 20s
+        # No Docker health check — GHA holds steps when health check fails during cold start.
+        # Port readiness is handled by the nc loop below.
 
     env:
-      # Shared environment for all steps in this job
       PORT: 5001
       MONGO_URI: mongodb://127.0.0.1:27017/valet-test
       JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci_test_jwt_secret_do_not_use_in_production' }}
@@ -81,18 +76,38 @@ jobs:
         working-directory: ./server
         run: npm install
 
-      - name: Verify MongoDB is Ready
+      - name: Diagnose MongoDB Service
         run: |
-          echo "Verifying MongoDB port is open..."
-          for i in {1..10}; do
+          echo "=== Running Docker containers ==="
+          docker ps -a
+          echo ""
+          echo "=== Listening TCP ports ==="
+          ss -tlnp || netstat -tlnp 2>/dev/null || true
+          echo ""
+          echo "=== Attempting nc probe on 27017 ==="
+          nc -vz 127.0.0.1 27017 2>&1 || echo "(nc probe result above)"
+
+      - name: Wait for MongoDB Port
+        run: |
+          echo "Waiting for MongoDB port 27017..."
+          for i in {1..20}; do
             if nc -z 127.0.0.1 27017; then
-              echo "✅ MongoDB port 27017 is open and ready."
+              echo "✅ MongoDB port 27017 is open (attempt $i)."
               exit 0
             fi
-            echo "Attempt $i/10: port not open yet, waiting 3s..."
+            echo "Attempt $i/20: port not open yet, waiting 3s..."
             sleep 3
           done
-          echo "❌ MongoDB port 27017 not reachable after 30s."
+          echo ""
+          echo "❌ MongoDB port never opened. Final diagnostics:"
+          docker ps -a
+          MONGO_ID=$(docker ps -aqf "ancestor=mongo:7.0" 2>/dev/null || docker ps -aqf "name=mongo" 2>/dev/null || true)
+          if [ -n "$MONGO_ID" ]; then
+            echo "=== MongoDB container logs ==="
+            docker logs "$MONGO_ID" 2>&1 || true
+            echo "=== MongoDB container inspect ==="
+            docker inspect "$MONGO_ID" 2>&1 | head -80 || true
+          fi
           exit 1
 
       - name: Start Backend Server
@@ -102,7 +117,7 @@ jobs:
           node index.js &
           SERVER_PID=$!
           echo "Server PID: $SERVER_PID"
-          echo "Waiting for server to be ready at http://127.0.0.1:$PORT/..."
+          echo "Waiting for server at http://127.0.0.1:$PORT/..."
           npx --yes wait-on "http://127.0.0.1:$PORT/" --timeout 60000 --interval 1000
           echo "✅ Server is ready."
 
@@ -112,3 +127,4 @@ jobs:
           echo "Running E2E tests..."
           node e2e_test.js
           echo "✅ E2E tests completed."
+
