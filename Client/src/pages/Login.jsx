@@ -22,7 +22,9 @@ const Login = () => {
     
     const res = await login(email, password);
     if (res.success) {
-      navigate('/');
+      if (res.user?.role === 'Admin') navigate('/admin');
+      else if (res.user?.role === 'Valet') navigate('/valet');
+      else navigate('/customer');
     } else {
       setError(res.message);
     }
@@ -35,7 +37,9 @@ const Login = () => {
     setLoading(true);
     const res = await loginWithGoogle();
     if (res.success) {
-      navigate('/');
+      if (res.user?.role === 'Admin') navigate('/admin');
+      else if (res.user?.role === 'Valet') navigate('/valet');
+      else navigate('/customer');
     } else {
       setError(res.message);
     }

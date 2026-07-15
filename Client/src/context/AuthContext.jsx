@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
       localStorage.setItem('userInfo', JSON.stringify(data));
       api.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
       localStorage.setItem('token', idToken);
-      return { success: true };
+      return { success: true, user: data };
     } catch (error) {
       await signOut(auth);
       return {

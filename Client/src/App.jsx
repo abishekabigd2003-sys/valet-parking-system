@@ -51,8 +51,15 @@ function App() {
         <div className="min-h-screen bg-themeBg text-themeText font-sans transition-colors duration-300">
           <Suspense fallback={<Loader fullScreen={true} />}>
             <Routes>
-              {/* Public Landing Page */}
-              <Route path="/" element={<Home />} />
+              <Route path="/" element={
+                user ? (
+                  user.role === 'Admin' ? <Navigate to="/admin" replace /> :
+                  user.role === 'Valet' ? <Navigate to="/valet" replace /> :
+                  <Navigate to="/customer" replace />
+                ) : (
+                  <Home />
+                )
+              } />
               
               <Route path="/login" element={
                 user ? (
