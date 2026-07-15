@@ -74,6 +74,7 @@ jobs:
           FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID || 'test_project' }}
           FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL || 'test@example.com' }}
           FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY || 'test_key' }}
+          CLIENT_URL: ${{ secrets.CLIENT_URL || 'http://localhost:5173' }}
 
       - name: Run End-to-End Tests
         working-directory: ./server
