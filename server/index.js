@@ -8,6 +8,9 @@ const { Server } = require('socket.io');
 
 dotenv.config();
 
+const validateEnv = require('./config/validateEnv');
+validateEnv();
+
 const app = express();
 
 const server = http.createServer(app);
@@ -51,4 +54,8 @@ app.use('/api/payments', require('./routes/paymentRoutes'));
 
 const PORT = process.env.PORT || 5000;
 
-server.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+server.listen(PORT, () => {
+  console.log('\n=========================================');
+  console.log(`🚀 Server successfully started on port ${PORT}`);
+  console.log('=========================================\n');
+});

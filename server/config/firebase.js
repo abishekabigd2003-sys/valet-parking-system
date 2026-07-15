@@ -25,7 +25,13 @@ try {
     }
   }
 } catch (error) {
-  console.error('Firebase Admin SDK initialization error:', error);
+  console.error('\n=========================================');
+  console.error('❌ FIREBASE INITIALIZATION ERROR');
+  console.error('=========================================');
+  console.error(`Error Message: ${error.message}`);
+  console.error('Please ensure FIREBASE_PRIVATE_KEY is formatted correctly and includes newlines if set.');
+  console.error('=========================================\n');
+  process.exit(1);
 }
 
 // Export an object that mimics the old default export structure for auth
