@@ -37,11 +37,16 @@ io.on('connection', (socket) => {
 });
 
 // Security & Middleware
+app.use(cors({
+  origin: allowedOrigins
+}));
 app.use(helmet({
   contentSecurityPolicy: false, // Disabled to allow Firebase iframe and external assets without complex configuration
 }));
+app.use(express.json());
 app.use(mongoSanitize()); // Prevent NoSQL injection
 app.use(xss()); // Prevent XSS attacks
+app.use(compression());
 
 // Rate Limiting
 const limiter = rateLimit({
@@ -52,12 +57,6 @@ const limiter = rateLimit({
   legacyHeaders: false,
 });
 app.use('/api', limiter);
-
-app.use(compression());
-app.use(cors({
-  origin: allowedOrigins
-}));
-app.use(express.json());
 
 // Connect Database
 connectDB();
