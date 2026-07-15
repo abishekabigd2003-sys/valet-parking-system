@@ -24,8 +24,12 @@ const Register = () => {
     e.preventDefault();
     setError('');
     setSuccessMsg('');
-    setLoading(true);
     
+    // Validations
+    if (password.length < 6) return setError('Password must be at least 6 characters.');
+    if (mobileNumber && !/^\+?[0-9]{10,15}$/.test(mobileNumber)) return setError('Invalid mobile number format.');
+
+    setLoading(true);
     const res = await register(name, email, password, role, mobileNumber);
     if (res.success) {
       setSuccessMsg('Registration successful! Please check your email to verify your account.');
