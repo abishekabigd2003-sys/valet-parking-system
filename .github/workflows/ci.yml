@@ -8,6 +8,7 @@ on:
 
 jobs:
   build-frontend:
+    name: Build Frontend
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -22,7 +23,7 @@ jobs:
 
       - name: Install Frontend Dependencies
         working-directory: ./Client
-        run: npm install
+        run: npm ci
 
       - name: Run ESLint
         working-directory: ./Client
@@ -32,15 +33,16 @@ jobs:
         working-directory: ./Client
         run: npm run build
         env:
-          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY || 'ci-placeholder' }}
-          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN || 'ci-placeholder.firebaseapp.com' }}
-          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID || 'ci-placeholder' }}
-          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET || 'ci-placeholder.appspot.com' }}
-          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID || '000000000000' }}
-          VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID || '1:000000000000:web:ci-placeholder' }}
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'http://localhost:5000/api' }}
+          VITE_FIREBASE_API_KEY: ${{ secrets.FIREBASE_API_KEY }}
+          VITE_FIREBASE_AUTH_DOMAIN: ${{ secrets.FIREBASE_AUTH_DOMAIN }}
+          VITE_FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID }}
+          VITE_FIREBASE_STORAGE_BUCKET: ${{ secrets.FIREBASE_STORAGE_BUCKET }}
+          VITE_FIREBASE_MESSAGING_SENDER_ID: ${{ secrets.FIREBASE_MESSAGING_SENDER_ID }}
+          VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_APP_ID }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
 
   test-backend:
+    name: Test Backend
     runs-on: ubuntu-latest
     services:
       mongodb:
@@ -48,10 +50,22 @@ jobs:
         ports:
           - 27017:27017
         options: >-
-          --health-cmd "mongosh --eval 'db.runCommand({ ping: 1 })'"
+          --health-cmd "mongosh --eval 'db.adminCommand({ping:1})' --quiet"
           --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-timeout 10s
+          --health-retries 6
+          --health-start-period 20s
+
+    env:
+      # Shared environment for all steps in this job
+      PORT: 5001
+      MONGO_URI: mongodb://127.0.0.1:27017/valet-test
+      JWT_SECRET: ${{ secrets.JWT_SECRET || 'ci_test_jwt_secret_do_not_use_in_production' }}
+      FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID || 'ci-test-project' }}
+      FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL || 'ci-test@ci-test.iam.gserviceaccount.com' }}
+      FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY || 'ci-placeholder-key' }}
+      CLIENT_URL: ${{ secrets.CLIENT_URL || 'http://localhost:5173' }}
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
@@ -65,26 +79,36 @@ jobs:
 
       - name: Install Backend Dependencies
         working-directory: ./server
-        run: npm install
+        run: npm ci
+
+      - name: Verify MongoDB is Ready
+        run: |
+          echo "Verifying MongoDB connection..."
+          for i in {1..10}; do
+            if mongosh --eval "db.adminCommand({ping:1})" --quiet mongodb://127.0.0.1:27017 2>/dev/null; then
+              echo "✅ MongoDB is ready."
+              exit 0
+            fi
+            echo "Attempt $i/10: MongoDB not ready yet, waiting 3s..."
+            sleep 3
+          done
+          echo "❌ MongoDB failed to become ready in time."
+          exit 1
 
       - name: Start Backend Server
         working-directory: ./server
         run: |
-          npm start &
-          npx --yes wait-on http://127.0.0.1:5001/ -t 60000
-        env:
-          PORT: 5001
-          MONGO_URI: mongodb://127.0.0.1:27017/valet-test
-          JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret_for_ci' }}
-          FIREBASE_PROJECT_ID: ${{ secrets.FIREBASE_PROJECT_ID || 'test_project' }}
-          FIREBASE_CLIENT_EMAIL: ${{ secrets.FIREBASE_CLIENT_EMAIL || 'test@example.com' }}
-          FIREBASE_PRIVATE_KEY: ${{ secrets.FIREBASE_PRIVATE_KEY || 'test_key' }}
-          CLIENT_URL: ${{ secrets.CLIENT_URL || 'http://localhost:5173' }}
+          echo "Starting backend server on port $PORT..."
+          node index.js &
+          SERVER_PID=$!
+          echo "Server PID: $SERVER_PID"
+          echo "Waiting for server to be ready at http://127.0.0.1:$PORT/..."
+          npx --yes wait-on "http://127.0.0.1:$PORT/" --timeout 60000 --interval 1000
+          echo "✅ Server is ready."
 
       - name: Run End-to-End Tests
         working-directory: ./server
-        run: node e2e_test.js
-        env:
-          PORT: 5001
-          MONGO_URI: mongodb://127.0.0.1:27017/valet-test
-          JWT_SECRET: ${{ secrets.JWT_SECRET || 'test_jwt_secret_for_ci' }}
+        run: |
+          echo "Running E2E tests..."
+          node e2e_test.js
+          echo "✅ E2E tests completed."
