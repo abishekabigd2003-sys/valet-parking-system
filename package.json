@@ -1,4 +1,8 @@
 {
+  "scripts": {
+    "build": "npm install --prefix server && npm install --prefix Client && npm run build --prefix Client",
+    "start": "npm start --prefix server"
+  },
   "dependencies": {
     "firebase": "^12.16.0"
   }
