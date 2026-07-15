@@ -3,9 +3,8 @@ services:
     name: valet-parking-backend
     env: node
     plan: free
-    rootDir: server
-    buildCommand: npm install
-    startCommand: npm start
+    buildCommand: npm install --prefix server && npm install --prefix Client && npm run build --prefix Client
+    startCommand: npm start --prefix server
     envVars:
       - key: PORT
         value: 5000

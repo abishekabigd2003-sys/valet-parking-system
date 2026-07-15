@@ -5,6 +5,7 @@ const dotenv = require('dotenv');
 const connectDB = require('./config/db');
 const http = require('http');
 const { Server } = require('socket.io');
+const path = require('path');
 
 dotenv.config();
 
@@ -51,6 +52,16 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/parking', require('./routes/parkingRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
+
+// Serve Frontend in Production
+if (process.env.NODE_ENV === 'production' || true) {
+  const clientBuildPath = path.join(__dirname, '../Client/dist');
+  app.use(express.static(clientBuildPath));
+
+  app.get('*', (req, res) => {
+    res.sendFile(path.join(clientBuildPath, 'index.html'));
+  });
+}
 
 const PORT = process.env.PORT || 5000;
 
