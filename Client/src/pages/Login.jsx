@@ -137,7 +137,7 @@ const Login = () => {
           </div>
 
           <p className="mt-6 text-center text-sm text-themeText-secondary">
-            Don't you have an account?{' '}
+            Don't have an account?{' '}
             <Link to="/register" className="text-primary hover:underline font-medium">
               Create now
             </Link>
