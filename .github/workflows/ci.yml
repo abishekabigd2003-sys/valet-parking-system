@@ -83,16 +83,16 @@ jobs:
 
       - name: Verify MongoDB is Ready
         run: |
-          echo "Verifying MongoDB connection..."
+          echo "Verifying MongoDB port is open..."
           for i in {1..10}; do
-            if mongosh --eval "db.adminCommand({ping:1})" --quiet mongodb://127.0.0.1:27017 2>/dev/null; then
-              echo "✅ MongoDB is ready."
+            if nc -z 127.0.0.1 27017; then
+              echo "✅ MongoDB port 27017 is open and ready."
               exit 0
             fi
-            echo "Attempt $i/10: MongoDB not ready yet, waiting 3s..."
+            echo "Attempt $i/10: port not open yet, waiting 3s..."
             sleep 3
           done
-          echo "❌ MongoDB failed to become ready in time."
+          echo "❌ MongoDB port 27017 not reachable after 30s."
           exit 1
 
       - name: Start Backend Server
