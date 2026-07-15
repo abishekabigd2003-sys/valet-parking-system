@@ -23,7 +23,7 @@ jobs:
 
       - name: Install Frontend Dependencies
         working-directory: ./Client
-        run: npm ci
+        run: npm install
 
       - name: Run ESLint
         working-directory: ./Client
@@ -79,7 +79,7 @@ jobs:
 
       - name: Install Backend Dependencies
         working-directory: ./server
-        run: npm ci
+        run: npm install
 
       - name: Verify MongoDB is Ready
         run: |
