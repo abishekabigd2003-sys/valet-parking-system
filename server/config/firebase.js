@@ -8,8 +8,12 @@ try {
       const serviceAccount = {
         projectId: process.env.FIREBASE_PROJECT_ID,
         clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        // Replace escaped newline characters from the env variable
-        privateKey: process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n'),
+        // Robust private key parsing:
+        // 1. Strip surrounding quotes if accidentally included when pasting
+        // 2. Replace literal \n escape sequences with real newline characters
+        privateKey: process.env.FIREBASE_PRIVATE_KEY
+          .replace(/^["']|["']$/g, '')   // strip surrounding quotes
+          .replace(/\\n/g, '\n'),         // convert \n to real newlines
       };
       initializeApp({
         credential: cert(serviceAccount)
