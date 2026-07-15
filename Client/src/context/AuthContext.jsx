@@ -61,7 +61,7 @@ export const AuthProvider = ({ children }) => {
       await signOut(auth);
       return {
         success: false,
-        message: error.response?.data?.message || 'Failed to sync user data',
+        message: error.response?.data?.message || (error.response ? `HTTP ${error.response.status}` : error.message) || 'Failed to sync user data',
       };
     }
   };
