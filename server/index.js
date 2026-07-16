@@ -19,7 +19,12 @@ validateEnv();
 const app = express();
 
 const server = http.createServer(app);
-const allowedOrigins = process.env.CLIENT_URL ? [process.env.CLIENT_URL, 'http://localhost:5173'] : '*';
+const rawClientUrl = process.env.CLIENT_URL || '';
+const clientUrl = rawClientUrl.trim().replace(/\/$/, '');
+
+const allowedOrigins = clientUrl 
+  ? [clientUrl, 'http://localhost:5173', 'http://localhost:5000', 'https://valet-parking-system-qtci.onrender.com'] 
+  : '*';
 
 const io = new Server(server, {
   cors: {
@@ -38,7 +43,20 @@ io.on('connection', (socket) => {
 
 // Security & Middleware
 app.use(cors({
-  origin: allowedOrigins
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins === '*') return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      // Fallback: if it's a Render domain, just allow it
+      if (origin && origin.endsWith('onrender.com')) {
+        callback(null, true);
+      } else {
+        callback(null, false); // Block quietly instead of crashing
+      }
+    }
+  },
+  credentials: true
 }));
 app.use(helmet({
   contentSecurityPolicy: false, // Disabled to allow Firebase iframe and external assets without complex configuration

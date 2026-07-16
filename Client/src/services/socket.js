@@ -1,9 +1,14 @@
 import { io } from 'socket.io-client';
 
-// Use environment variable if available, otherwise fallback to standard port
-const SOCKET_URL = import.meta.env.VITE_API_URL 
-  ? import.meta.env.VITE_API_URL.replace('/api', '') 
-  : (import.meta.env.PROD ? '/' : 'http://localhost:5000');
+const getCleanSocketUrl = () => {
+  const rawUrl = import.meta.env.VITE_API_URL;
+  if (rawUrl && typeof rawUrl === 'string') {
+    return rawUrl.replace(/^VITE_API_URL=/, '').replace('/api', '').trim();
+  }
+  return import.meta.env.PROD ? '/' : 'http://localhost:5000';
+};
+
+const SOCKET_URL = getCleanSocketUrl();
 
 const socket = io(SOCKET_URL, {
   autoConnect: true,

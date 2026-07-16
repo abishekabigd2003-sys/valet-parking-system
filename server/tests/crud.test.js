@@ -12,7 +12,7 @@ app.use(express.json());
 // Mock auth middleware to automatically authenticate requests
 jest.mock('../middleware/authMiddleware', () => ({
   protect: (req, res, next) => {
-    req.user = { _id: 'admin_id_123', role: 'Admin' };
+    req.user = { _id: '507f1f77bcf86cd799439011', role: 'Admin' };
     next();
   },
   adminOrValet: (req, res, next) => next()
@@ -44,7 +44,7 @@ describe('CRUD Operations Integration Tests', () => {
         .post('/api/parking/check-in')
         .send(payload);
 
-      expect(res.statusCode).toEqual(201);
+      if(res.statusCode === 500) console.log(res.body); expect(res.statusCode).toEqual(201);
       expect(res.body.ticketNumber).toBeDefined();
       expect(res.body.status).toBe('Parked');
 
