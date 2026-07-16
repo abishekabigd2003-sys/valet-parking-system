@@ -55,7 +55,7 @@ const Register = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 relative overflow-hidden bg-themeBg">
+    <div className="min-h-screen flex items-center justify-center p-4 py-10 relative overflow-hidden bg-themeBg">
       {/* Background blobs */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/20 blur-[120px] pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-500/20 blur-[120px] pointer-events-none" />
@@ -66,7 +66,7 @@ const Register = () => {
         transition={{ duration: 0.5 }}
         className="w-full max-w-md z-10"
       >
-        <Card className="p-8">
+        <Card className="p-6 sm:p-8">
           <div className="flex flex-col items-center mb-8">
             <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center mb-4 border border-primary/20">
               <CarFront className="w-8 h-8 text-primary" />

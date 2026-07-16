@@ -48,12 +48,12 @@ const AdminCustomers = () => {
 
   return (
     <div className="space-y-6 relative">
-      <div className="flex justify-between items-center">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
           <h1 className="text-2xl font-bold text-themeText">Manage Customers</h1>
           <p className="text-themeText-secondary">View and manage all registered customers.</p>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <Button onClick={fetchCustomers} variant="secondary" className="flex items-center gap-2">
             <RefreshCw className="w-4 h-4" /> Refresh
           </Button>
@@ -64,7 +64,7 @@ const AdminCustomers = () => {
 
       <Card className="overflow-hidden p-0">
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full text-left border-collapse whitespace-nowrap">
             <thead>
               <tr className="bg-themeBg-paper text-themeText-secondary text-sm tracking-wider uppercase border-b border-themeBorder">
                 <th className="px-6 py-4 font-medium">Name</th>
