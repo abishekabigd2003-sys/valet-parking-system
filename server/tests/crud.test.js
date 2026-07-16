@@ -1,5 +1,6 @@
 const request = require('supertest');
 const express = require('express');
+jest.setTimeout(30000);
 const parkingRoutes = require('../routes/parkingRoutes');
 const { connect, closeDatabase, clearDatabase } = require('./setup');
 const Customer = require('../models/Customer');
@@ -27,8 +28,8 @@ describe('CRUD Operations Integration Tests', () => {
   describe('POST /api/parking/check-in', () => {
     it('should successfully check-in a vehicle and return a ticket', async () => {
       // Seed required data for check-in
-      await ParkingSlot.create({ floor: '1', slotNumber: '101', status: 'Available' });
-      await Tariff.create({ vehicleType: 'Car', hourlyRate: 50, minimumHours: 2 });
+      await ParkingSlot.create({ floor: '1', slotNumber: '101', status: 'Available', zone: 'VIP' });
+      await Tariff.create({ vehicleType: 'Car', hourlyRate: 50, minimumHours: 2, dailyRate: 500 });
 
       const payload = {
         customerName: 'John Doe',

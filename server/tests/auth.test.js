@@ -11,10 +11,12 @@ app.use('/api/auth', authRoutes);
 
 // Mock the Firebase Admin verifyIdToken globally
 jest.mock('../config/firebase', () => {
+  const mVerifyIdToken = jest.fn();
   return {
     auth: () => ({
-      verifyIdToken: jest.fn()
-    })
+      verifyIdToken: mVerifyIdToken
+    }),
+    mVerifyIdToken // export it so tests can use it
   };
 });
 
@@ -35,7 +37,7 @@ describe('Auth Controller Integration Tests', () => {
 
     it('should sync user and return success when token is valid', async () => {
       // Mock successful verification
-      admin.auth().verifyIdToken.mockResolvedValue({
+      admin.mVerifyIdToken.mockResolvedValue({
         uid: 'firebase_123',
         email: 'test@example.com',
         picture: 'http://example.com/pic.jpg',

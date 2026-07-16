@@ -52,6 +52,11 @@ export const AuthProvider = ({ children }) => {
   const syncUserWithBackend = async (idToken, name, mobileNumber) => {
     try {
       const { data } = await api.post('/auth/sync', { idToken, name, mobileNumber });
+      
+      if (typeof data === 'string' && data.toLowerCase().includes('<!doctype html>')) {
+        throw new Error('Received HTML instead of JSON. Ensure your frontend VITE_API_URL points to a valid backend and not a static HTML fallback.');
+      }
+
       setUser(data);
       localStorage.setItem('userInfo', JSON.stringify(data));
       api.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
