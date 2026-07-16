@@ -45,8 +45,8 @@ describe('CRUD Operations Integration Tests', () => {
         .send(payload);
 
       if(res.statusCode === 500) console.log(res.body); expect(res.statusCode).toEqual(201);
-      expect(res.body.ticketNumber).toBeDefined();
-      expect(res.body.status).toBe('Parked');
+      expect(res.body.transaction.ticketNumber).toBeDefined();
+      expect(res.body.transaction.status).toBe('Parked');
 
       // Verify customer was created
       const customer = await Customer.findOne({ mobileNumber: '1234567890' });

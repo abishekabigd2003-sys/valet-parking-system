@@ -63,10 +63,15 @@ const syncUser = async (req, res) => {
       return res.status(401).json({ message: 'Account is inactive' });
     }
 
-    // Auto-promote the designated admin email to Admin role
-    // This fixes the issue in production where the DB wasn't seeded.
-    if (user.email === 'admin@zenpark.com' && user.role !== 'Admin') {
+    // Auto-promote based on environment variable list
+    const adminEmails = (process.env.ADMIN_EMAILS || '')
+      .split(',')
+      .map(e => e.trim().toLowerCase())
+      .filter(e => e.length > 0);
+      
+    if (adminEmails.includes(user.email.toLowerCase()) && user.role !== 'Admin') {
       user.role = 'Admin';
+      console.log(`Auto-promoted ${user.email} to Admin via ADMIN_EMAILS env variable.`);
     }
 
     await user.save();
