@@ -61,10 +61,7 @@ app.use('/api', limiter);
 // Connect Database
 connectDB();
 
-// Basic Route
-app.get('/', (req, res) => {
-  res.send('Valet Parking System API is running...');
-});
+// Removed Basic Route to allow React app to handle '/'
 
 // Define Routes
 app.use('/api/auth', require('./routes/authRoutes'));
