@@ -25,18 +25,15 @@ const connectDB = async () => {
       family: 4 // Use IPv4, skip trying IPv6
     });
 
-    console.log(`MongoDB Connected (Atlas): ${conn.connection.host}`);
+    console.log(`\n=========================================`);
+    console.log(`✅ Connected to MongoDB Atlas`);
+    console.log(`📂 Database Name: ${conn.connection.name}`);
+    console.log(`=========================================\n`);
   } catch (error) {
     console.error('\n=========================================');
     console.error('❌ MONGODB CONNECTION ERROR');
     console.error('=========================================');
     console.error(`Error Message: ${error.message}`);
-    
-    if (process.env.MONGO_URI && (process.env.MONGO_URI.includes('127.0.0.1') || process.env.MONGO_URI.includes('localhost'))) {
-      console.error('HINT: You are trying to connect to a local MongoDB.');
-      console.error('If this is deployed on Render, it cannot access your local database.');
-      console.error('Please ensure MONGO_URI in Render is set to your MongoDB Atlas connection string.');
-    }
     console.error('=========================================\n');
     process.exit(1);
   }
