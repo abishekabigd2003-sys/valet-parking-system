@@ -15,8 +15,8 @@ try {
         .replace(/^["']|["']$/g, '')
         .replace(/\\n/g, '\n');
 
-      const projectId = (process.env.FIREBASE_PROJECT_ID || '').replace(/^["']|["']$/g, '');
-      const clientEmail = (process.env.FIREBASE_CLIENT_EMAIL || '').replace(/^["']|["']$/g, '');
+      const projectId = (process.env.FIREBASE_PROJECT_ID || '').trim().replace(/^["']|["']$/g, '').trim();
+      const clientEmail = (process.env.FIREBASE_CLIENT_EMAIL || '').trim().replace(/^["']|["']$/g, '').trim();
 
       const serviceAccount = {
         projectId,
