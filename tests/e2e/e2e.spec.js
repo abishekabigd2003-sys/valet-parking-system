@@ -123,19 +123,24 @@ test('Valet: Multi-Vehicle Workflow & Retrieval', async ({ page }) => {
   await page.click('text=Vehicle Check-out');
   await page.waitForURL('**/valet/retrieve**');
 
-  // Verify at least one is in the Active table
-  await expect(page.locator('text=DEMO-001').first()).toBeVisible();
+  // Search for DEMO-001
+  await page.fill('input[placeholder="Enter Ticket # or Vehicle #"]', 'DEMO-001');
+  await page.click('button:has-text("Search Record")');
+  await page.waitForTimeout(1000);
+
+  // Verify record is found
+  await expect(page.locator('h3:has-text("Ticket Info")').first()).toBeVisible();
 
   // Process checkout for DEMO-001
-  await page.locator('tr:has-text("DEMO-001")').locator('button:has-text("Process Checkout")').click();
+  await page.click('button:has-text("Mark as Retrieved & Calculate Fee")');
   await page.waitForTimeout(1000);
   
-  // In the modal, confirm payment/checkout
-  await page.click('button:has-text("Complete Checkout")');
+  // Confirm payment
+  await page.click('button:has-text("Confirm Payment")');
   await page.waitForTimeout(1500);
 
-  // DEMO-001 should be gone from active list
-  await expect(page.locator('tr:has-text("DEMO-001")')).toHaveCount(0);
+  // Verify checkout completion
+  await expect(page.locator('text=Payment Completed').first()).toBeVisible();
 });
 
 // 4. Customer Module: Registration & Onboarding
