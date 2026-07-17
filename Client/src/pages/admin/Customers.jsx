@@ -5,12 +5,14 @@ import { Input } from '../../components/Input';
 import api from '../../services/api';
 import moment from 'moment';
 import { ExportButton } from '../../components/ExportButton';
-import { RefreshCw } from 'lucide-react';
+import { Edit2, Trash2, RefreshCw } from 'lucide-react';
 
 const AdminCustomers = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editId, setEditId] = useState(null);
   const [formData, setFormData] = useState({ name: '', mobileNumber: '', email: '' });
   const [submitting, setSubmitting] = useState(false);
 
@@ -29,17 +31,47 @@ const AdminCustomers = () => {
     fetchCustomers();
   }, []);
 
-  const handleAddCustomer = async (e) => {
+  const openAddModal = () => {
+    setIsEditing(false);
+    setEditId(null);
+    setFormData({ name: '', mobileNumber: '', email: '' });
+    setShowModal(true);
+  };
+
+  const openEditModal = (customer) => {
+    setIsEditing(true);
+    setEditId(customer._id);
+    setFormData({ name: customer.name, mobileNumber: customer.mobileNumber, email: customer.email || '' });
+    setShowModal(true);
+  };
+
+  const handleDeleteCustomer = async (id) => {
+    if (window.confirm('Are you sure you want to delete this customer?')) {
+      try {
+        await api.delete(`/admin/customers/${id}`);
+        fetchCustomers();
+      } catch (err) {
+        console.error('Error deleting customer', err);
+        alert(err.response?.data?.message || 'Error deleting customer');
+      }
+    }
+  };
+
+  const handleSubmitCustomer = async (e) => {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await api.post('/admin/customers', formData);
+      if (isEditing) {
+        await api.put(`/admin/customers/${editId}`, formData);
+      } else {
+        await api.post('/admin/customers', formData);
+      }
       setShowModal(false);
       setFormData({ name: '', mobileNumber: '', email: '' });
       fetchCustomers();
     } catch (err) {
-      console.error('Error adding customer', err);
-      alert(err.response?.data?.message || 'Error adding customer');
+      console.error('Error saving customer', err);
+      alert(err.response?.data?.message || 'Error saving customer');
     }
     setSubmitting(false);
   };
@@ -58,7 +90,7 @@ const AdminCustomers = () => {
             <RefreshCw className="w-4 h-4" /> Refresh
           </Button>
           <ExportButton data={customers} filename="Customers_Report" />
-          <Button onClick={() => setShowModal(true)}>+ Add Customer</Button>
+          <Button onClick={openAddModal}>+ Add Customer</Button>
         </div>
       </div>
 
@@ -71,6 +103,7 @@ const AdminCustomers = () => {
                 <th className="px-6 py-4 font-medium">Mobile</th>
                 <th className="px-6 py-4 font-medium">Email</th>
                 <th className="px-6 py-4 font-medium">Joined</th>
+                <th className="px-6 py-4 font-medium">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-themeBorder">
@@ -80,11 +113,19 @@ const AdminCustomers = () => {
                   <td className="px-6 py-4 text-themeText-secondary">{customer.mobileNumber}</td>
                   <td className="px-6 py-4 text-themeText-secondary">{customer.email || 'N/A'}</td>
                   <td className="px-6 py-4 text-themeText-secondary text-sm">{moment(customer.createdAt).format('MMM DD, YYYY')}</td>
+                  <td className="px-6 py-4 flex gap-2">
+                    <button onClick={() => openEditModal(customer)} className="text-themeText-secondary hover:text-themeText transition-colors" title="Edit">
+                      <Edit2 className="w-4 h-4" />
+                    </button>
+                    <button onClick={() => handleDeleteCustomer(customer._id)} className="text-themeText-secondary hover:text-red-500 transition-colors" title="Delete">
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </td>
                 </tr>
               ))}
               {customers.length === 0 && (
                 <tr>
-                  <td colSpan="4" className="px-6 py-8 text-center text-themeText-secondary">No customers found.</td>
+                  <td colSpan="5" className="px-6 py-8 text-center text-themeText-secondary">No customers found.</td>
                 </tr>
               )}
             </tbody>
@@ -95,8 +136,8 @@ const AdminCustomers = () => {
       {showModal && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
           <Card className="w-full max-w-md p-6">
-            <h2 className="text-xl font-bold text-themeText mb-4">Add New Customer</h2>
-            <form onSubmit={handleAddCustomer} className="space-y-4">
+            <h2 className="text-xl font-bold text-themeText mb-4">{isEditing ? 'Edit Customer' : 'Add New Customer'}</h2>
+            <form onSubmit={handleSubmitCustomer} className="space-y-4" autoComplete="off">
               <Input
                 label="Name"
                 required
@@ -118,7 +159,7 @@ const AdminCustomers = () => {
               <div className="flex gap-3 justify-end mt-6">
                 <Button variant="ghost" type="button" onClick={() => setShowModal(false)}>Cancel</Button>
                 <Button type="submit" disabled={submitting}>
-                  {submitting ? 'Adding...' : 'Add Customer'}
+                  {submitting ? 'Saving...' : (isEditing ? 'Save Changes' : 'Add Customer')}
                 </Button>
               </div>
             </form>

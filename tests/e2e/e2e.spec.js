@@ -79,6 +79,22 @@ test('Admin: Staff & Customer Management', async ({ page }) => {
 
   // Verify Customer
   await expect(page.locator('text=Admin Created Customer').first()).toBeVisible();
+
+  // Edit Customer
+  await page.locator('tr:has-text("Admin Created Customer")').locator('button[title="Edit"]').click();
+  await page.locator('label:has-text("Name") + input').fill('Admin Created Customer Edited');
+  await page.click('form button:has-text("Save Changes")');
+  await page.waitForTimeout(1000);
+
+  // Verify Edit
+  await expect(page.locator('text=Admin Created Customer Edited').first()).toBeVisible();
+
+  // Delete Customer
+  await page.locator('tr:has-text("Admin Created Customer Edited")').locator('button[title="Delete"]').click();
+  await page.waitForTimeout(1000);
+  
+  // Verify Delete
+  await expect(page.locator('text=Admin Created Customer Edited')).toHaveCount(0);
 });
 
 // 3. Valet Module: Complete Demo Workflow (5 Vehicles)
@@ -192,4 +208,23 @@ test('Security & RBAC Enforcement', async ({ page }) => {
   
   await page.waitForURL('**/customer**');
   await expect(page).not.toHaveURL(/\/admin/);
+});
+// 8. Valet Module: Error Handling & Edge Cases
+test('Valet: Error Handling & Edge Cases', async ({ page }) => {
+  await page.goto('/login');
+  await page.fill('input[type="email"]', 'valet@e2e.test');
+  await page.fill('input[type="password"]', 'password123');
+  await page.click('button[type="submit"]');
+  await page.waitForURL('**/valet**');
+
+  await page.click('text=Vehicle Check-out');
+  await page.waitForURL('**/valet/retrieve**');
+
+  // Search for a non-existent ticket
+  await page.fill('input[placeholder="Enter Ticket # or Vehicle #"]', 'INVALID-TICKET-999');
+  await page.click('button:has-text("Search Record")');
+  await page.waitForTimeout(1000);
+
+  // Expect an error message to be visible
+  await expect(page.locator('text=No active parking record found.').first()).toBeVisible();
 });

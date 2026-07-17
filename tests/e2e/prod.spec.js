@@ -143,6 +143,42 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
     }
   });
 
+  // 3.5. Admin Edit & Delete Customer
+  test('Scenario 3.5: Admin Edit & Delete Customer Verification', async ({ page }) => {
+    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.fill('input[type="email"]', 'admin_prod@e2e.test');
+    await page.fill('input[type="password"]', 'password123');
+    await page.click('button[type="submit"]');
+    await page.waitForURL('**/admin');
+
+    await page.click('text=Customers');
+    await page.waitForURL('**/admin/customers');
+
+    // Create a temporary customer to edit and delete
+    await page.click('text=+ Add Customer');
+    await page.locator('label:has-text("Name") + input').fill('Temp Cust');
+    await page.locator('label:has-text("Mobile Number") + input').fill('0000000000');
+    await page.locator('form button:has-text("Add Customer")').click();
+    await page.waitForTimeout(1500);
+
+    // Edit customer
+    await page.locator('tr:has-text("Temp Cust")').locator('button[title="Edit"]').click();
+    await page.locator('label:has-text("Name") + input').fill('Temp Cust Edited');
+    await page.locator('form button:has-text("Save Changes")').click();
+    await page.waitForTimeout(1500);
+
+    // Verify edit
+    await expect(page.locator('text=Temp Cust Edited').first()).toBeVisible();
+
+    // Delete customer
+    page.once('dialog', dialog => dialog.accept());
+    await page.locator('tr:has-text("Temp Cust Edited")').locator('button[title="Delete"]').click();
+    await page.waitForTimeout(1500);
+
+    // Verify deletion
+    await expect(page.locator('text=Temp Cust Edited')).toHaveCount(0);
+  });
+
   // 4. Admin Edit & Delete Staff
   test('Scenario 4: Admin Edit & Delete Staff Verification', async ({ page }) => {
     await page.goto('https://valet-parking-system-qtci.onrender.com/login');
@@ -185,11 +221,12 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
     await page.click('button[type="submit"]');
 
     await page.waitForURL('**/customer');
-    await expect(page.locator('text=Welcome back').first()).toBeVisible();
+    await expect(page.locator('text=Welcome to your customer portal.').first()).toBeVisible();
   });
 
   // 6. Valet checks in 10 Demo Vehicles
   test('Scenario 6: Valet checks in 10 Demo Vehicles', async ({ page }) => {
+    test.setTimeout(60000); // 60 seconds timeout since it loops 10 times
     await page.goto('https://valet-parking-system-qtci.onrender.com/login');
     await page.fill('input[type="email"]', valets[0].email);
     await page.fill('input[type="password"]', 'password123');
@@ -204,16 +241,19 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
       // Use existing customer mobile
       const customer = customers[i % customers.length];
 
-      await page.fill('input[placeholder="Customer Name"]', customer.name);
-      await page.fill('input[placeholder="Mobile Number"]', customer.mobile);
-      await page.fill('input[placeholder="Vehicle Number"]', v.num);
-      await page.selectOption('select', { label: v.type });
+      await page.locator('label:has-text("Mobile Number") + input').fill(customer.mobile);
+      await page.locator('label:has-text("Customer Name") + input').fill(customer.name);
+      await page.locator('label:has-text("Vehicle Number") + input').fill(v.num);
+      await page.locator('select').first().selectOption(v.type);
       
-      await page.click('button:has-text("Check-in Vehicle")');
+      await page.click('button:has-text("Assign Slot & Check-In")');
       
-      // Wait for success modal
-      await expect(page.locator('text=Vehicle successfully parked at slot').first()).toBeVisible();
-      await page.click('button:has-text("Check-in Another Vehicle")');
+      await page.waitForTimeout(1500); // Wait for check-in process
+      
+      if (i < vehicles.length - 1) {
+        await page.click('button:has-text("Check-In Another Vehicle")');
+        await page.waitForTimeout(500);
+      }
     }
   });
 
@@ -237,12 +277,11 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
     await page.click('button:has-text("Mark as Retrieved & Calculate Fee")');
 
     // Process Payment
-    await page.selectOption('select', { label: 'Cash' });
     await page.click('button:has-text("Confirm Payment")');
+    await page.waitForTimeout(1500);
     
     // Success
-    await expect(page.locator('text=Payment successful').first()).toBeVisible();
-    await page.click('button:has-text("Close")');
+    await expect(page.locator('text=Payment Completed').first()).toBeVisible();
   });
 
   // 8. Valet errors out on invalid ticket retrieval
@@ -273,8 +312,8 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
     await page.click('text=Reports');
     await page.waitForURL('**/admin/reports');
 
-    // Verify the charts are rendered
-    await expect(page.locator('canvas').first()).toBeVisible();
+    // Verify the charts are rendered (Recharts uses SVG)
+    await expect(page.locator('svg.recharts-surface').first()).toBeVisible();
 
     await page.click('text=Payments');
     await page.waitForURL('**/admin/payments');

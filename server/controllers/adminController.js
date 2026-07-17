@@ -243,6 +243,59 @@ const createCustomer = async (req, res) => {
   }
 };
 
+// @desc    Update a customer
+// @route   PUT /api/admin/customers/:id
+// @access  Private/Admin
+const updateCustomer = async (req, res) => {
+  try {
+    const { name, mobileNumber, email } = req.body;
+    const customer = await Customer.findById(req.params.id);
+
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    if (mobileNumber && mobileNumber !== customer.mobileNumber) {
+      const existing = await Customer.findOne({ mobileNumber });
+      if (existing) {
+        return res.status(400).json({ message: 'Customer with this mobile number already exists' });
+      }
+      customer.mobileNumber = mobileNumber;
+    }
+
+    if (name) customer.name = name;
+    if (email !== undefined) customer.email = email; // Allow clearing email
+
+    const updatedCustomer = await customer.save();
+    res.json(updatedCustomer);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Delete a customer
+// @route   DELETE /api/admin/customers/:id
+// @access  Private/Admin
+const deleteCustomer = async (req, res) => {
+  try {
+    const customer = await Customer.findById(req.params.id);
+    if (!customer) {
+      return res.status(404).json({ message: 'Customer not found' });
+    }
+
+    // Check if customer is associated with any parking transactions
+    const hasTransactions = await ParkingTransaction.exists({ customerId: req.params.id });
+    if (hasTransactions) {
+      return res.status(400).json({ message: 'Cannot delete customer associated with parking transactions. They have historical data.' });
+    }
+
+    await Customer.deleteOne({ _id: req.params.id });
+    res.json({ message: 'Customer removed' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // @desc    Get all payments
 // @route   GET /api/admin/payments
 // @access  Private/Admin
@@ -338,6 +391,8 @@ module.exports = {
   seedSlots,
   getCustomers,
   createCustomer,
+  updateCustomer,
+  deleteCustomer,
   getPayments,
   getTariffs,
   getTransactions

@@ -150,11 +150,12 @@ const AdminStaff = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <Card className="w-full max-w-md p-6">
             <h2 className="text-xl font-bold text-themeText mb-4">{isEditing ? 'Edit Staff' : 'Add New Staff'}</h2>
-            <form onSubmit={handleSubmitStaff} className="space-y-4">
+            <form onSubmit={handleSubmitStaff} className="space-y-4" autoComplete="off">
               <Input
                 label="Name"
                 required
                 value={formData.name}
+                autoComplete="off"
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
               <Input
@@ -162,6 +163,7 @@ const AdminStaff = () => {
                 type="email"
                 required
                 value={formData.email}
+                autoComplete="new-password"
                 onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               />
               <Input
@@ -169,6 +171,7 @@ const AdminStaff = () => {
                 type="password"
                 required={!isEditing}
                 value={formData.password}
+                autoComplete="new-password"
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
               />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
