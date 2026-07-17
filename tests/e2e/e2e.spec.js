@@ -40,9 +40,9 @@ test('Admin: Staff & Customer Management', async ({ page }) => {
 
   // Create Staff
   await page.click('text=+ Add Staff');
-  await page.locator('label:has-text("Name") + input').fill('Demo Valet');
-  await page.locator('label:has-text("Email") + input').fill('valet_demo@e2e.test');
-  await page.locator('label:has-text("Password") + input').fill('password123');
+  await page.locator('label:has-text("Name") ~ div input, label:has-text("Name") ~ input').fill('Demo Valet');
+  await page.locator('label:has-text("Email") ~ div input, label:has-text("Email") ~ input').fill('valet_demo@e2e.test');
+  await page.locator('label:has-text("Password") ~ div input, label:has-text("Password") ~ input').fill('password123');
   
   await page.locator('form button:has-text("Add Staff")').click();
   await page.waitForTimeout(1000); // Wait for modal to close and refresh
@@ -54,7 +54,7 @@ test('Admin: Staff & Customer Management', async ({ page }) => {
   // Using the first edit button on the row containing Demo Valet
   await page.locator('tr:has-text("Demo Valet")').locator('button[title="Edit"]').click();
   // Change name
-  await page.locator('label:has-text("Name") + input').fill('Demo Valet Edited');
+  await page.locator('label:has-text("Name") ~ div input, label:has-text("Name") ~ input').fill('Demo Valet Edited');
   await page.click('button:has-text("Save Changes")');
   await page.waitForTimeout(1000);
 
@@ -72,8 +72,8 @@ test('Admin: Staff & Customer Management', async ({ page }) => {
 
   // Create Customer
   await page.click('text=+ Add Customer');
-  await page.locator('label:has-text("Name") + input').fill('Admin Created Customer');
-  await page.locator('label:has-text("Mobile Number") + input').fill('9999999999');
+  await page.locator('label:has-text("Name") ~ div input, label:has-text("Name") ~ input').fill('Admin Created Customer');
+  await page.locator('label:has-text("Mobile Number") ~ div input, label:has-text("Mobile Number") ~ input').fill('9999999999');
   await page.locator('form button:has-text("Add Customer")').click();
   await page.waitForTimeout(1000);
 
@@ -82,7 +82,7 @@ test('Admin: Staff & Customer Management', async ({ page }) => {
 
   // Edit Customer
   await page.locator('tr:has-text("Admin Created Customer")').locator('button[title="Edit"]').click();
-  await page.locator('label:has-text("Name") + input').fill('Admin Created Customer Edited');
+  await page.locator('label:has-text("Name") ~ div input, label:has-text("Name") ~ input').fill('Admin Created Customer Edited');
   await page.click('form button:has-text("Save Changes")');
   await page.waitForTimeout(1000);
 
@@ -121,9 +121,9 @@ test('Valet: Multi-Vehicle Workflow & Retrieval', async ({ page }) => {
     const v = vehicles[i];
     
     // Fill Check-in form
-    await page.locator('label:has-text("Mobile Number") + input').fill(v.phone);
-    await page.locator('label:has-text("Customer Name") + input').fill(v.name);
-    await page.locator('label:has-text("Vehicle Number") + input').fill(v.num);
+    await page.locator('label:has-text("Mobile Number") ~ div input, label:has-text("Mobile Number") ~ input').fill(v.phone);
+    await page.locator('label:has-text("Customer Name") ~ div input, label:has-text("Customer Name") ~ input').fill(v.name);
+    await page.locator('label:has-text("Vehicle Number") ~ div input, label:has-text("Vehicle Number") ~ input').fill(v.num);
     await page.locator('select').first().selectOption(v.type);
     
     await page.click('button:has-text("Assign Slot & Check-In")');

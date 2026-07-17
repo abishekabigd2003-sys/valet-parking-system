@@ -104,9 +104,9 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
     for (const valet of valets) {
       await page.click('text=+ Add Staff');
-      await page.locator('label:has-text("Name") + input').fill(valet.name);
-      await page.locator('label:has-text("Email") + input').fill(valet.email);
-      await page.locator('label:has-text("Password") + input').fill('password123');
+      await page.locator('label:has-text("Name") ~ div input, label:has-text("Name") ~ input').fill(valet.name);
+      await page.locator('label:has-text("Email") ~ div input, label:has-text("Email") ~ input').fill(valet.email);
+      await page.locator('label:has-text("Password") ~ div input, label:has-text("Password") ~ input').fill('password123');
       await page.locator('form button:has-text("Add Staff")').click();
       await page.waitForTimeout(1000); // Wait for modal to close
     }
@@ -130,9 +130,9 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
     for (const customer of customers) {
       await page.click('text=+ Add Customer');
-      await page.locator('label:has-text("Name") + input').fill(customer.name);
-      await page.locator('label:has-text("Mobile Number") + input').fill(customer.mobile);
-      await page.locator('label:has-text("Email") + input').fill(customer.email);
+      await page.locator('label:has-text("Name") ~ div input, label:has-text("Name") ~ input').fill(customer.name);
+      await page.locator('label:has-text("Mobile Number") ~ div input, label:has-text("Mobile Number") ~ input').fill(customer.mobile);
+      await page.locator('label:has-text("Email") ~ div input, label:has-text("Email") ~ input').fill(customer.email);
       await page.locator('form button:has-text("Add Customer")').click();
       await page.waitForTimeout(1000);
     }
@@ -156,14 +156,14 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
     // Create a temporary customer to edit and delete
     await page.click('text=+ Add Customer');
-    await page.locator('label:has-text("Name") + input').fill('Temp Cust');
-    await page.locator('label:has-text("Mobile Number") + input').fill('0000000000');
+    await page.locator('label:has-text("Name") ~ div input, label:has-text("Name") ~ input').fill('Temp Cust');
+    await page.locator('label:has-text("Mobile Number") ~ div input, label:has-text("Mobile Number") ~ input').fill('0000000000');
     await page.locator('form button:has-text("Add Customer")').click();
     await page.waitForTimeout(1500);
 
     // Edit customer
     await page.locator('tr:has-text("Temp Cust")').locator('button[title="Edit"]').click();
-    await page.locator('label:has-text("Name") + input').fill('Temp Cust Edited');
+    await page.locator('label:has-text("Name") ~ div input, label:has-text("Name") ~ input').fill('Temp Cust Edited');
     await page.locator('form button:has-text("Save Changes")').click();
     await page.waitForTimeout(1500);
 
@@ -192,16 +192,16 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
     // Create a temporary staff to edit and delete
     await page.click('text=+ Add Staff');
-    await page.locator('label:has-text("Name") + input').fill('Temp Staff');
-    await page.locator('label:has-text("Email") + input').fill('temp@e2e.test');
-    await page.locator('label:has-text("Password") + input').fill('password123');
+    await page.locator('label:has-text("Name") ~ div input, label:has-text("Name") ~ input').fill('Temp Staff');
+    await page.locator('label:has-text("Email") ~ div input, label:has-text("Email") ~ input').fill('temp@e2e.test');
+    await page.locator('label:has-text("Password") ~ div input, label:has-text("Password") ~ input').fill('password123');
     await page.locator('form button:has-text("Add Staff")').click();
     await page.waitForTimeout(1000);
 
     // Edit it
     const row = page.locator('tr', { hasText: 'temp@e2e.test' });
     await row.locator('button[title="Edit"]').click();
-    await page.locator('label:has-text("Name") + input').fill('Temp Staff Edited');
+    await page.locator('label:has-text("Name") ~ div input, label:has-text("Name") ~ input').fill('Temp Staff Edited');
     await page.locator('form button:has-text("Save Changes")').click();
     await page.waitForTimeout(1000);
     await expect(page.locator('text=Temp Staff Edited').first()).toBeVisible();
@@ -241,9 +241,9 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
       // Use existing customer mobile
       const customer = customers[i % customers.length];
 
-      await page.locator('label:has-text("Mobile Number") + input').fill(customer.mobile);
-      await page.locator('label:has-text("Customer Name") + input').fill(customer.name);
-      await page.locator('label:has-text("Vehicle Number") + input').fill(v.num);
+      await page.locator('label:has-text("Mobile Number") ~ div input, label:has-text("Mobile Number") ~ input').fill(customer.mobile);
+      await page.locator('label:has-text("Customer Name") ~ div input, label:has-text("Customer Name") ~ input').fill(customer.name);
+      await page.locator('label:has-text("Vehicle Number") ~ div input, label:has-text("Vehicle Number") ~ input').fill(v.num);
       await page.locator('select').first().selectOption(v.type);
       
       await page.click('button:has-text("Assign Slot & Check-In")');
