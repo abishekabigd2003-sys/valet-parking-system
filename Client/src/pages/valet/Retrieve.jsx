@@ -73,14 +73,13 @@ const ValetRetrieve = () => {
 
   const handlePayment = async () => {
     try {
-      await api.post(`/payments/process`, {
+      const response = await api.post(`/payments/process`, {
         transactionId: transaction._id,
         amount: transaction.feeCalculated,
         paymentMethod: paymentMode
       });
-      // Refresh transaction state
-      const { data } = await api.get(`/parking/search?q=${transaction.ticketNumber}`);
-      setTransaction(data);
+      // Update transaction state with the completed transaction returned by the API
+      setTransaction(response.data.transaction);
     } catch (err) {
       setError(err.response?.data?.message || 'Payment failed');
     }

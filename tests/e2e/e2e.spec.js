@@ -74,7 +74,7 @@ test('Admin: Staff & Customer Management', async ({ page }) => {
   await page.click('text=+ Add Customer');
   await page.locator('label:has-text("Name") + input').fill('Admin Created Customer');
   await page.locator('label:has-text("Mobile Number") + input').fill('9999999999');
-  await page.click('button:has-text("Add Customer")');
+  await page.locator('form button:has-text("Add Customer")').click();
   await page.waitForTimeout(1000);
 
   // Verify Customer
