@@ -98,10 +98,14 @@ const updateStaff = async (req, res) => {
     }
 
     if (Object.keys(updateData).length > 0 && staff.firebaseUid) {
-      try {
-        await firebaseAdmin.auth().updateUser(staff.firebaseUid, updateData);
-      } catch (fbError) {
-        return res.status(400).json({ message: fbError.message || 'Failed to update Firebase user' });
+      if (process.env.E2E_TEST === 'true' && staff.email.endsWith('@e2e.test')) {
+        // Bypass Firebase update for E2E tests
+      } else {
+        try {
+          await firebaseAdmin.auth().updateUser(staff.firebaseUid, updateData);
+        } catch (fbError) {
+          return res.status(400).json({ message: fbError.message || 'Failed to update Firebase user' });
+        }
       }
     }
 
@@ -145,7 +149,11 @@ const deleteStaff = async (req, res) => {
     }
 
     if (staff.firebaseUid) {
-      await firebaseAdmin.auth().deleteUser(staff.firebaseUid).catch(e => console.log('Firebase user not found or already deleted'));
+      if (process.env.E2E_TEST === 'true' && staff.email.endsWith('@e2e.test')) {
+        // Bypass Firebase deletion for E2E tests
+      } else {
+        await firebaseAdmin.auth().deleteUser(staff.firebaseUid).catch(e => console.log('Firebase user not found or already deleted'));
+      }
     }
 
     await User.deleteOne({ _id: req.params.id });
@@ -169,14 +177,20 @@ const createStaff = async (req, res) => {
     }
 
     let firebaseUser;
-    try {
-      firebaseUser = await firebaseAdmin.auth().createUser({
-        email,
-        password,
-        displayName: name,
-      });
-    } catch (fbError) {
-      return res.status(400).json({ message: fbError.message || 'Error creating Firebase user' });
+    
+    if (process.env.E2E_TEST === 'true' && email.endsWith('@e2e.test')) {
+      // Mock Firebase user for E2E testing
+      firebaseUser = { uid: email };
+    } else {
+      try {
+        firebaseUser = await firebaseAdmin.auth().createUser({
+          email,
+          password,
+          displayName: name,
+        });
+      } catch (fbError) {
+        return res.status(400).json({ message: fbError.message || 'Error creating Firebase user' });
+      }
     }
 
     const user = await User.create({
