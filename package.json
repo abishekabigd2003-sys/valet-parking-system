@@ -5,5 +5,24 @@
   },
   "dependencies": {
     "firebase": "^12.16.0"
-  }
+  },
+  "name": "valet-parking-system",
+  "version": "1.0.0",
+  "description": "![Version](https://img.shields.io/badge/version-1.0.0-blue.svg) ![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg) ![Node.js](https://img.shields.io/badge/Node.js-339933?style=flat&logo=nodedotjs&logoColor=white) ![React](https://img.shields.io/badge/React-20232A?style=flat&logo=react&logoColor=61DAFB) ![MongoDB](https://img.shields.io/badge/MongoDB-4EA94B?style=flat&logo=mongodb&logoColor=white) ![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=flat&logo=firebase&logoColor=black)",
+  "main": "index.js",
+  "devDependencies": {
+    "@playwright/test": "^1.61.1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/abishekabigd2003-sys/valet-parking-system.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/abishekabigd2003-sys/valet-parking-system/issues"
+  },
+  "homepage": "https://github.com/abishekabigd2003-sys/valet-parking-system#readme"
 }

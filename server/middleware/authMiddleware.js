@@ -20,7 +20,7 @@ const protect = async (req, res, next) => {
         const payloadBase64 = token.split('.')[1];
         const decodedJson = Buffer.from(payloadBase64, 'base64').toString();
         decodedToken = JSON.parse(decodedJson);
-        decodedToken.uid = decodedToken.user_id;
+        decodedToken.uid = decodedToken.uid || decodedToken.user_id;
       }
 
       // Find user by firebaseUid

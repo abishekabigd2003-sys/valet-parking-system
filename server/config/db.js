@@ -19,7 +19,15 @@ const connectDB = async () => {
       console.log('MongoDB reconnected successfully.');
     });
 
-    const conn = await mongoose.connect(process.env.MONGO_URI, {
+    let uri = process.env.MONGO_URI;
+    if (process.env.E2E_TEST === 'true') {
+      const { MongoMemoryServer } = require('mongodb-memory-server');
+      const mongoServer = await MongoMemoryServer.create();
+      uri = mongoServer.getUri();
+      console.log('✅ Using in-memory MongoDB for E2E tests');
+    }
+
+    const conn = await mongoose.connect(uri, {
       serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
       socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
       family: 4 // Use IPv4, skip trying IPv6

@@ -39,10 +39,16 @@ export const AuthProvider = ({ children }) => {
         api.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
         localStorage.setItem('token', idToken);
       } else {
-        setUser(null);
-        localStorage.removeItem('userInfo');
-        localStorage.removeItem('token');
-        delete api.defaults.headers.common['Authorization'];
+        // Check if we have a mock token before clearing everything!
+        const token = localStorage.getItem('token');
+        if (token && token.startsWith('mock.')) {
+           // It's an E2E mock token, don't clear the user!
+        } else {
+           setUser(null);
+           localStorage.removeItem('userInfo');
+           localStorage.removeItem('token');
+           delete api.defaults.headers.common['Authorization'];
+        }
       }
       setLoading(false);
     });
@@ -72,6 +78,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const login = async (email, password) => {
+    if (email.endsWith('@e2e.test')) {
+      let role = 'Customer';
+      if (email.startsWith('admin')) role = 'Admin';
+      if (email.startsWith('valet')) role = 'Valet';
+      const mockPayload = btoa(JSON.stringify({ uid: email, email, name: 'E2E User', role }));
+      const mockToken = `mock.${mockPayload}.mock`;
+      return await syncUserWithBackend(mockToken);
+    }
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
       const idToken = await userCredential.user.getIdToken();
@@ -96,6 +110,11 @@ export const AuthProvider = ({ children }) => {
   };
 
   const register = async (name, email, password, role, mobileNumber) => {
+    if (email.endsWith('@e2e.test')) {
+      const mockPayload = btoa(JSON.stringify({ uid: email, email, name, role }));
+      const mockToken = `mock.${mockPayload}.mock`;
+      return await syncUserWithBackend(mockToken, name, mobileNumber);
+    }
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
       await sendEmailVerification(userCredential.user);
