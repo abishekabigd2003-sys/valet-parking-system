@@ -9,6 +9,8 @@ const {
   checkOutVehicle,
   createBooking,
   getActiveTransactionForSlot,
+  getCustomerActiveTickets,
+  getCustomerHistory,
 } = require('../controllers/parkingController');
 
 // Public route for landing page booking form
@@ -20,5 +22,7 @@ router.route('/search').get(protect, searchVehicle);
 router.route('/retrieve/:id').put(protect, requestRetrieval);
 router.route('/check-out/:id').post(protect, checkOutVehicle);
 router.route('/slot/:slotId/transaction').get(protect, getActiveTransactionForSlot);
+router.route('/customer/active').get(protect, getCustomerActiveTickets);
+router.route('/customer/history').get(protect, getCustomerHistory);
 
 module.exports = router;

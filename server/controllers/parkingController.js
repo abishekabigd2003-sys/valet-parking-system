@@ -302,6 +302,67 @@ const getActiveTransactionForSlot = async (req, res) => {
   }
 };
 
+// @desc    Get active parking tickets for the logged in customer
+// @route   GET /api/parking/customer/active
+// @access  Private
+const getCustomerActiveTickets = async (req, res) => {
+  try {
+    const userEmail = req.user.email;
+    const userMobile = req.user.mobileNumber;
+
+    const customers = await Customer.find({
+      $or: [
+        ...(userEmail ? [{ email: userEmail }] : []),
+        ...(userMobile ? [{ mobileNumber: userMobile }] : [])
+      ]
+    }).select('_id').lean();
+
+    const customerIds = customers.map(c => c._id);
+
+    const activeTickets = await ParkingTransaction.find({
+      customerId: { $in: customerIds },
+      status: { $ne: 'Completed' }
+    })
+    .populate('vehicleId slotId')
+    .sort({ createdAt: -1 })
+    .lean();
+
+    res.json(activeTickets);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Get parking history for the logged in customer
+// @route   GET /api/parking/customer/history
+// @access  Private
+const getCustomerHistory = async (req, res) => {
+  try {
+    const userEmail = req.user.email;
+    const userMobile = req.user.mobileNumber;
+
+    const customers = await Customer.find({
+      $or: [
+        ...(userEmail ? [{ email: userEmail }] : []),
+        ...(userMobile ? [{ mobileNumber: userMobile }] : [])
+      ]
+    }).select('_id').lean();
+
+    const customerIds = customers.map(c => c._id);
+
+    const history = await ParkingTransaction.find({
+      customerId: { $in: customerIds }
+    })
+    .populate('vehicleId slotId')
+    .sort({ createdAt: -1 })
+    .lean();
+
+    res.json(history);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   checkInVehicle,
   getAvailableSlots,
@@ -310,4 +371,6 @@ module.exports = {
   checkOutVehicle,
   createBooking,
   getActiveTransactionForSlot,
+  getCustomerActiveTickets,
+  getCustomerHistory,
 };

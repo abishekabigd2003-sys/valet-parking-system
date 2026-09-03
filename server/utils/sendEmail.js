@@ -1,27 +1,52 @@
 const nodemailer = require('nodemailer');
 
-const sendEmail = async (options) => {
-  try {
-    if (!options.email) {
-      console.warn("No email provided, skipping email send.");
-      return;
-    }
-    // Generate test SMTP service account from ethereal.email
-    let testAccount = await nodemailer.createTestAccount();
+let cachedTransporter = null;
 
-    // create reusable transporter object using the default SMTP transport
-    let transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
-      secure: false, // true for 465, false for other ports
+const getTransporter = async () => {
+  if (cachedTransporter) return cachedTransporter;
+
+  if (process.env.SMTP_HOST && process.env.SMTP_USER) {
+    cachedTransporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT || 587,
+      secure: false,
       auth: {
-        user: testAccount.user, // generated ethereal user
-        pass: testAccount.pass, // generated ethereal password
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
       },
     });
+  } else {
+    try {
+      const testAccount = await nodemailer.createTestAccount();
+      cachedTransporter = nodemailer.createTransport({
+        host: "smtp.ethereal.email",
+        port: 587,
+        secure: false,
+        auth: {
+          user: testAccount.user,
+          pass: testAccount.pass,
+        },
+      });
+    } catch (err) {
+      console.warn("Could not create ethereal test account:", err.message);
+      return null;
+    }
+  }
+  return cachedTransporter;
+};
 
-    // send mail with defined transport object
-    let info = await transporter.sendMail({
+const sendEmail = async (options) => {
+  try {
+    if (!options.email) return;
+
+    if (process.env.NODE_ENV === 'test' || process.env.E2E_TEST === 'true') {
+      return; // Skip slow remote SMTP calls in automated test environments
+    }
+
+    const transporter = await getTransporter();
+    if (!transporter) return;
+
+    const info = await transporter.sendMail({
       from: '"Valet Parking System" <no-reply@valetparking.com>',
       to: options.email, 
       subject: options.subject, 
@@ -29,10 +54,8 @@ const sendEmail = async (options) => {
     });
 
     console.log("Message sent: %s", info.messageId);
-    // Preview only available when sending through an Ethereal account
-    console.log("Preview URL: %s", nodemailer.getTestMessageUrl(info));
   } catch (error) {
-    console.error("Error sending email:", error);
+    console.warn("Error sending email:", error.message);
   }
 };
 

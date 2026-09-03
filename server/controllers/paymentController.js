@@ -36,6 +36,13 @@ const processPayment = async (req, res) => {
     transaction.status = 'Completed';
     await transaction.save();
 
+    // Emit real-time event to update dashboards
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('statsUpdated');
+      io.emit('paymentCompleted', payment);
+    }
+
     // Send Check-Out Email to Customer
     const checkInTime = moment(transaction.checkInTime).format('DD/MM/YYYY HH:mm');
     const checkOutTime = moment(transaction.checkOutTime || new Date()).format('DD/MM/YYYY HH:mm');

@@ -79,7 +79,8 @@ app.get('/ping', (req, res) => res.status(200).send('pong'));
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 200, // Limit each IP to 200 requests per `window`
+  max: process.env.NODE_ENV === 'test' || process.env.E2E_TEST === 'true' ? 10000 : 1000,
+  skip: () => process.env.NODE_ENV === 'test' || process.env.E2E_TEST === 'true',
   message: 'Too many requests from this IP, please try again after 15 minutes',
   standardHeaders: true,
   legacyHeaders: false,
