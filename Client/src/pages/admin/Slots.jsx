@@ -31,8 +31,12 @@ const AdminSlots = () => {
 
   const seedSlots = async () => {
     try {
-      await api.post('/admin/seed-slots');
-      fetchSlots();
+      const { data } = await api.post('/admin/seed-slots');
+      if (data.slots && Array.isArray(data.slots)) {
+        setSlots(data.slots);
+      } else {
+        fetchSlots();
+      }
     } catch (err) {
       alert(err.response?.data?.message || 'Error seeding slots');
     }

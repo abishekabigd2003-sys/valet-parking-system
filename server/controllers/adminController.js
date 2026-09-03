@@ -355,9 +355,6 @@ const getTariffs = async (req, res) => {
 // @access  Private/Admin
 const seedSlots = async (req, res) => {
   try {
-    const existing = await ParkingSlot.countDocuments();
-    if (existing > 0) return res.status(400).json({ message: 'Slots already seeded' });
-
     const slotsToSeed = [];
     ['A', 'B'].forEach(zone => {
       [1, 2].forEach(floor => {
@@ -366,13 +363,22 @@ const seedSlots = async (req, res) => {
             slotNumber: `${zone}${floor}-${i.toString().padStart(2, '0')}`,
             zone,
             floor: floor.toString(),
-            vehicleType: i > 8 ? 'SUV' : (i > 6 ? 'Bike' : 'Car')
+            vehicleType: i > 8 ? 'SUV' : (i > 6 ? 'Bike' : 'Car'),
+            status: 'Available'
           });
         }
       });
     });
 
-    await ParkingSlot.insertMany(slotsToSeed);
+    const bulkOps = slotsToSeed.map(slot => ({
+      updateOne: {
+        filter: { slotNumber: slot.slotNumber },
+        update: { $setOnInsert: slot },
+        upsert: true
+      }
+    }));
+
+    await ParkingSlot.bulkWrite(bulkOps);
 
     const existingTariffs = await Tariff.countDocuments();
     if (existingTariffs === 0) {
@@ -383,7 +389,13 @@ const seedSlots = async (req, res) => {
       ]);
     }
 
-    res.json({ message: '40 Slots seeded successfully and default Tariffs created.' });
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('statsUpdated');
+    }
+
+    const allSlots = await ParkingSlot.find().sort({ floor: 1, slotNumber: 1 }).lean();
+    res.json({ message: '40 Slots verified and seeded successfully.', slots: allSlots });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
