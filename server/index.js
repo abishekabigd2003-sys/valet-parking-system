@@ -131,6 +131,15 @@ app.use((err, req, res, next) => {
 
 const PORT = process.env.PORT || 5000;
 
+server.on('error', (err) => {
+  if (err.code === 'EADDRINUSE') {
+    console.error(`\n❌ Error: Port ${PORT} is already in use by another running process.`);
+    console.error(`👉 Tip: Stop the existing process or run: taskkill /F /IM node.exe\n`);
+  } else {
+    console.error('Server error:', err);
+  }
+});
+
 server.listen(PORT, () => {
   console.log('\n=========================================');
   console.log(`🚀 Server successfully started on port ${PORT}`);
