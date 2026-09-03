@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card } from '../../components/Card';
 import { Button } from '../../components/Button';
 import api from '../../services/api';
@@ -10,32 +10,21 @@ const AdminReports = () => {
   const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchStats = async () => {
-      setLoading(true);
-      try {
-        const { data } = await api.get('/admin/stats');
-        setStats(data);
-      } catch (err) {
-        console.error('Error fetching stats', err);
-      }
-      setLoading(false);
-    };
-    fetchStats();
-  }, []);
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await api.get('/admin/stats');
       setStats(data);
     } catch (err) {
       console.error('Error fetching stats', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, []);
 
-  if (loading) return <div className="text-themeText">Loading reports...</div>;
+  useEffect(() => {
+    fetchStats();
+  }, [fetchStats]);
 
   const occupancyData = [
     { name: 'Occupied', value: stats?.occupiedSlots || 0 },
@@ -51,7 +40,7 @@ const AdminReports = () => {
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <Button onClick={fetchStats} variant="secondary" className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4" /> Refresh
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </Button>
           <ExportButton data={stats?.recentTransactions || []} filename="Recent_Transactions" />
         </div>

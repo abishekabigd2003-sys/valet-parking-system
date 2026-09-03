@@ -110,8 +110,6 @@ const AdminSlots = () => {
     }
   };
 
-  if (loading) return <div className="text-themeText">Loading slots...</div>;
-
   return (
     <>
       <div className="space-y-6">
@@ -120,27 +118,34 @@ const AdminSlots = () => {
             <h1 className="text-2xl font-bold text-themeText">Parking Slots</h1>
             <p className="text-themeText-secondary">Manage all parking bays and monitor availability.</p>
           </div>
-          {slots.length === 0 && (
+          {!loading && slots.length === 0 && (
             <Button onClick={seedSlots} className="bg-primary text-black">Generate 40 Test Slots</Button>
           )}
         </div>
 
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-          {slots.map(slot => (
-            <div
-              key={slot._id}
-              onClick={() => handleSlotClick(slot)}
-              className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-2 cursor-pointer transition-all hover:scale-105 ${slot.status === 'Available' ? 'bg-green-500/10 border-green-500/30 hover:bg-green-500/20' :
-                  slot.status === 'Occupied' ? 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20' :
-                    'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20'
-                }`}
-            >
-              <span className="text-lg font-bold text-themeText">{slot.slotNumber}</span>
-              <span className={`text-xs font-bold uppercase tracking-wide ${slot.status === 'Available' ? 'text-green-500' : 'text-red-500'
-                }`}>{slot.status}</span>
-            </div>
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-16 text-themeText-secondary gap-2">
+            <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+            <span>Loading slots...</span>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
+            {slots.map(slot => (
+              <div
+                key={slot._id}
+                onClick={() => handleSlotClick(slot)}
+                className={`p-4 rounded-xl border flex flex-col items-center justify-center gap-2 cursor-pointer transition-all hover:scale-105 ${slot.status === 'Available' ? 'bg-green-500/10 border-green-500/30 hover:bg-green-500/20' :
+                    slot.status === 'Occupied' ? 'bg-red-500/10 border-red-500/30 hover:bg-red-500/20' :
+                      'bg-yellow-500/10 border-yellow-500/30 hover:bg-yellow-500/20'
+                  }`}
+              >
+                <span className="text-lg font-bold text-themeText">{slot.slotNumber}</span>
+                <span className={`text-xs font-bold uppercase tracking-wide ${slot.status === 'Available' ? 'text-green-500' : 'text-red-500'
+                  }`}>{slot.status}</span>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Right Drawer Modal */}

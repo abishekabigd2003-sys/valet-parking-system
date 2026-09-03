@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { Card } from '../../components/Card';
 import api from '../../services/api';
 import moment from 'moment';
@@ -10,32 +10,22 @@ const AdminPayments = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchPayments = async () => {
-      setLoading(true);
-      try {
-        const { data } = await api.get('/admin/payments');
-        setPayments(data);
-      } catch (err) {
-        console.error('Error fetching payments', err);
-      }
-      setLoading(false);
-    };
-    fetchPayments();
-  }, []);
-
-  const fetchPayments = async () => {
+  const fetchPayments = useCallback(async () => {
     setLoading(true);
     try {
       const { data } = await api.get('/admin/payments');
-      setPayments(data);
+      setPayments(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching payments', err);
+      setPayments([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, []);
 
-  if (loading) return <div className="text-themeText">Loading payments...</div>;
+  useEffect(() => {
+    fetchPayments();
+  }, [fetchPayments]);
 
   return (
     <div className="space-y-6">
@@ -46,7 +36,7 @@ const AdminPayments = () => {
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <Button onClick={fetchPayments} variant="secondary" className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4" /> Refresh
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </Button>
           <ExportButton data={payments} filename="Payments_Report" />
         </div>
@@ -66,21 +56,31 @@ const AdminPayments = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-themeBorder">
-              {payments.map(payment => (
-                <tr key={payment._id} className="hover:bg-themeBg transition-colors">
-                  <td className="px-6 py-4 font-mono text-xs text-themeText-secondary">{payment.transactionId?.ticketNumber || 'N/A'}</td>
-                  <td className="px-6 py-4 font-bold text-themeText">{payment.transactionId?.customerId?.name || 'N/A'}</td>
-                  <td className="px-6 py-4 text-primary font-bold">₹{payment.amount.toLocaleString('en-IN')}</td>
-                  <td className="px-6 py-4 text-themeText-secondary capitalize">{payment.paymentMethod}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded text-xs font-bold ${
-                      payment.status === 'Completed' ? 'bg-green-500/20 text-green-500' : 'bg-yellow-500/20 text-yellow-500'
-                    }`}>{payment.status}</span>
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-themeText-secondary">
+                    <div className="flex items-center justify-center gap-2">
+                      <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+                      <span>Loading payments...</span>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 text-themeText-secondary text-sm">{moment(payment.createdAt).format('MMM DD, YYYY HH:mm')}</td>
                 </tr>
-              ))}
-              {payments.length === 0 && (
+              ) : payments.length > 0 ? (
+                payments.map(payment => (
+                  <tr key={payment._id} className="hover:bg-themeBg transition-colors">
+                    <td className="px-6 py-4 font-mono text-xs text-themeText-secondary">{payment.transactionId?.ticketNumber || 'N/A'}</td>
+                    <td className="px-6 py-4 font-bold text-themeText">{payment.transactionId?.customerId?.name || 'N/A'}</td>
+                    <td className="px-6 py-4 text-primary font-bold">₹{payment.amount.toLocaleString('en-IN')}</td>
+                    <td className="px-6 py-4 text-themeText-secondary capitalize">{payment.paymentMethod}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                        payment.status === 'Completed' ? 'bg-green-500/20 text-green-500' : 'bg-yellow-500/20 text-yellow-500'
+                      }`}>{payment.status}</span>
+                    </td>
+                    <td className="px-6 py-4 text-themeText-secondary text-sm">{moment(payment.createdAt).format('MMM DD, YYYY HH:mm')}</td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
                   <td colSpan="6" className="px-6 py-8 text-center text-themeText-secondary">No payments found.</td>
                 </tr>
