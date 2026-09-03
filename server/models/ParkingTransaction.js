@@ -60,6 +60,8 @@ const parkingTransactionSchema = mongoose.Schema(
 
 parkingTransactionSchema.index({ vehicleId: 1, status: 1 });
 parkingTransactionSchema.index({ slotId: 1, status: 1 });
+parkingTransactionSchema.index({ customerId: 1, status: 1 });
+parkingTransactionSchema.index({ createdAt: -1 });
 
 const ParkingTransaction = mongoose.model('ParkingTransaction', parkingTransactionSchema);
 module.exports = ParkingTransaction;

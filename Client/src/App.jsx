@@ -28,7 +28,11 @@ const CustomerReports = React.lazy(() => import('./pages/customer/Reports'));
 const CustomerSettings = React.lazy(() => import('./pages/customer/Settings'));
 
 const ProtectedRoute = ({ children, roles }) => {
-  const { user } = useAuth();
+  const { user, loading } = useAuth();
+
+  if (loading && !user) {
+    return <Loader fullScreen={true} />;
+  }
 
   if (!user) {
     return <Navigate to="/login" replace />;
@@ -45,11 +49,9 @@ function App() {
   const { user } = useAuth();
 
   return (
-    <>
-      <Loader global={true} />
-      <Router>
-        <div className="min-h-screen bg-themeBg text-themeText font-sans transition-colors duration-300">
-          <Suspense fallback={<Loader fullScreen={true} />}>
+    <Router>
+      <div className="min-h-screen bg-themeBg text-themeText font-sans transition-colors duration-300">
+        <Suspense fallback={<Loader fullScreen={true} />}>
             <Routes>
               <Route path="/" element={
                 user ? (
@@ -131,7 +133,6 @@ function App() {
           </Suspense>
         </div>
       </Router>
-    </>
   );
 }
 

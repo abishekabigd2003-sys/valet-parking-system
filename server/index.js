@@ -66,6 +66,16 @@ app.use(mongoSanitize()); // Prevent NoSQL injection
 app.use(xss()); // Prevent XSS attacks
 app.use(compression());
 
+// Fast health check endpoint (bypasses rate limit)
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'ok',
+    uptime: process.uptime(),
+    timestamp: new Date().toISOString()
+  });
+});
+app.get('/ping', (req, res) => res.status(200).send('pong'));
+
 // Rate Limiting
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
@@ -87,12 +97,23 @@ app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/parking', require('./routes/parkingRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 
-// Serve Frontend in Production
+// Serve Frontend in Production with Caching Headers
 if (process.env.NODE_ENV === 'production' || true) {
   const clientBuildPath = path.join(__dirname, '../Client/dist');
-  app.use(express.static(clientBuildPath));
+  app.use(express.static(clientBuildPath, {
+    maxAge: '1d',
+    setHeaders: (res, filePath) => {
+      // Hashed static files in dist/assets can be cached immutably for 1 year
+      if (filePath.includes(path.join('dist', 'assets'))) {
+        res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+      } else if (filePath.endsWith('.html')) {
+        res.setHeader('Cache-Control', 'no-cache');
+      }
+    }
+  }));
 
   app.get('*', (req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
     res.sendFile(path.join(clientBuildPath, 'index.html'));
   });
 }

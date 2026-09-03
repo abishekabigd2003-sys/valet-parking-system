@@ -32,7 +32,13 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   useEffect(() => {
+    // Safety timeout: Ensure app never waits for Firebase network longer than 1.2s
+    const safetyTimer = setTimeout(() => {
+      setLoading(false);
+    }, 1200);
+
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      clearTimeout(safetyTimer);
       if (firebaseUser) {
         // Refresh token on state change to ensure backend gets a valid token
         const idToken = await firebaseUser.getIdToken();
@@ -52,7 +58,11 @@ export const AuthProvider = ({ children }) => {
       }
       setLoading(false);
     });
-    return unsubscribe;
+
+    return () => {
+      clearTimeout(safetyTimer);
+      unsubscribe();
+    };
   }, []);
 
   const syncUserWithBackend = async (idToken, name, mobileNumber) => {
@@ -158,7 +168,7 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider value={{ user, login, loginWithGoogle, register, logout, resetPassword, updateProfile, loading }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   );
 };

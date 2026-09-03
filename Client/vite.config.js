@@ -14,6 +14,21 @@ export default defineConfig({
           if (id.includes('node_modules/firebase')) {
             return 'firebase-vendor';
           }
+          if (id.includes('node_modules/xlsx')) {
+            return 'xlsx-vendor';
+          }
+          if (id.includes('node_modules/recharts')) {
+            return 'recharts-vendor';
+          }
+          if (id.includes('node_modules/html5-qrcode') || id.includes('node_modules/qrcode')) {
+            return 'qrcode-vendor';
+          }
+          if (id.includes('node_modules/lucide-react')) {
+            return 'lucide-vendor';
+          }
+          if (id.includes('node_modules/framer-motion')) {
+            return 'framer-vendor';
+          }
         }
       }
     }

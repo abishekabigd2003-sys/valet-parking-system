@@ -1,24 +1,34 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-
 # Dependencies
 node_modules/
 Client/node_modules/
 server/node_modules/
 
-# Environment Variables
+# Environment Variables & Secrets
 .env
+.env*
+*.env
+*.env.*
 .env.local
 .env.development
 .env.production
 .env.test
-Client/.env
-server/.env
+Client/.env*
+server/.env*
+
+# Test Results & Reports
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+coverage/
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
 # Build and Output
 dist/
@@ -27,7 +37,6 @@ Client/dist/
 Client/build/
 server/dist/
 server/build/
-coverage/
 out/
 
 # IDE and Editor
