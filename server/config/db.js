@@ -37,9 +37,11 @@ const connectDB = async () => {
     let conn;
     try {
       conn = await mongoose.connect(uri, {
-        serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
-        socketTimeoutMS: 45000, // Close sockets after 45 seconds of inactivity
-        family: 4 // Use IPv4, skip trying IPv6
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
+        family: 4,
+        maxPoolSize: 20,
+        minPoolSize: 5,
       });
     } catch (connErr) {
       if (process.env.NODE_ENV !== 'production' && !uri.includes('127.0.0.1')) {

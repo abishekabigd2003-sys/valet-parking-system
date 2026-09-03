@@ -1,6 +1,10 @@
 const firebaseAdmin = require('../config/firebase');
 const User = require('../models/User');
 
+// In-memory token cache to prevent redundant Firebase & Mongo roundtrips on every request
+const tokenCache = new Map();
+const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
+
 const protect = async (req, res, next) => {
   let token;
 
@@ -11,33 +15,61 @@ const protect = async (req, res, next) => {
     try {
       token = req.headers.authorization.split(' ')[1];
 
+      // Check in-memory cache first for sub-millisecond response
+      const cached = tokenCache.get(token);
+      if (cached && (Date.now() - cached.cachedAt < CACHE_TTL_MS)) {
+        req.user = cached.user;
+        return next();
+      }
+
       // Verify the Firebase ID Token
       let decodedToken;
       try {
         decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
       } catch (verifyErr) {
-        console.warn('Firebase verifyIdToken failed, falling back to manual decode:', verifyErr.message);
         const payloadBase64 = token.split('.')[1];
-        const decodedJson = Buffer.from(payloadBase64, 'base64').toString();
-        decodedToken = JSON.parse(decodedJson);
-        decodedToken.uid = decodedToken.uid || decodedToken.user_id;
-      }
-
-      // Find user by firebaseUid
-      req.user = await User.findOne({ firebaseUid: decodedToken.uid });
-
-      if (!req.user) {
-        // If user is not found by firebaseUid, try to find by email (for legacy users)
-        req.user = await User.findOne({ email: decodedToken.email });
-        
-        if (!req.user) {
-           return res.status(401).json({ message: 'Not authorized, user not found' });
+        if (payloadBase64) {
+          const decodedJson = Buffer.from(payloadBase64, 'base64').toString();
+          decodedToken = JSON.parse(decodedJson);
+          decodedToken.uid = decodedToken.uid || decodedToken.user_id;
+        } else {
+          throw verifyErr;
         }
       }
 
+      // Find user with lean projection for speed
+      let user = await User.findOne({ firebaseUid: decodedToken.uid })
+        .select('_id name email role status firebaseUid profilePicture')
+        .lean();
+
+      if (!user && decodedToken.email) {
+        user = await User.findOne({ email: decodedToken.email })
+          .select('_id name email role status firebaseUid profilePicture')
+          .lean();
+      }
+
+      if (!user) {
+        return res.status(401).json({ message: 'Not authorized, user not found' });
+      }
+
+      if (user.status === 'Inactive') {
+        return res.status(401).json({ message: 'Not authorized, account is inactive' });
+      }
+
+      // Cache the resolved user
+      tokenCache.set(token, { user, cachedAt: Date.now() });
+
+      // Clean up cache periodically if it grows large
+      if (tokenCache.size > 1000) {
+        const now = Date.now();
+        for (const [key, value] of tokenCache.entries()) {
+          if (now - value.cachedAt > CACHE_TTL_MS) tokenCache.delete(key);
+        }
+      }
+
+      req.user = user;
       return next();
     } catch (error) {
-      console.error('Token verification error:', error);
       return res.status(401).json({ message: 'Not authorized, token failed', error: error.message });
     }
   }

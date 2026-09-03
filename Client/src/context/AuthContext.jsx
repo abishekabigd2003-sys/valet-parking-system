@@ -18,10 +18,21 @@ export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => {
-    const userInfo = localStorage.getItem('userInfo');
-    return userInfo ? JSON.parse(userInfo) : null;
+    try {
+      const userInfo = localStorage.getItem('userInfo');
+      return userInfo ? JSON.parse(userInfo) : null;
+    } catch {
+      return null;
+    }
   });
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => {
+    // If userInfo is cached, render instantly without blocking
+    try {
+      return !localStorage.getItem('userInfo');
+    } catch {
+      return false;
+    }
+  });
 
   // Set initial token if it exists
   useEffect(() => {

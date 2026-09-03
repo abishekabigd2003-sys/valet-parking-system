@@ -6,33 +6,57 @@ const Vehicle = require('../models/Vehicle');
 const Payment = require('../models/Payment');
 const Customer = require('../models/Customer');
 const Tariff = require('../models/Tariff');
+// Short-lived stats cache for rapid dashboard refreshes
+let statsCache = null;
+let statsCacheTime = 0;
+const STATS_CACHE_TTL = 3000; // 3 seconds
+
 // @desc    Get dashboard stats
 // @route   GET /api/admin/stats
 // @access  Private/Admin
 const getStats = async (req, res) => {
   try {
-    const totalVehicles = await Vehicle.countDocuments();
-    const availableSlots = await ParkingSlot.countDocuments({ status: 'Available' });
-    const occupiedSlots = await ParkingSlot.countDocuments({ status: 'Occupied' });
-    
-    // Revenue calculation (sum of all completed payments)
-    const payments = await Payment.find({ status: 'Completed' }).lean();
-    const revenue = payments.reduce((acc, curr) => acc + curr.amount, 0);
+    const now = Date.now();
+    if (statsCache && (now - statsCacheTime < STATS_CACHE_TTL)) {
+      return res.json(statsCache);
+    }
 
-    // Recent transactions
-    const recentTransactions = await ParkingTransaction.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate('vehicleId customerId slotId')
-      .lean();
+    // Execute all queries in parallel inside MongoDB
+    const [
+      totalVehicles,
+      availableSlots,
+      occupiedSlots,
+      revenueResult,
+      recentTransactions
+    ] = await Promise.all([
+      Vehicle.countDocuments(),
+      ParkingSlot.countDocuments({ status: 'Available' }),
+      ParkingSlot.countDocuments({ status: 'Occupied' }),
+      Payment.aggregate([
+        { $match: { status: 'Completed' } },
+        { $group: { _id: null, total: { $sum: '$amount' } } }
+      ]),
+      ParkingTransaction.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate('vehicleId customerId slotId')
+        .lean()
+    ]);
 
-    res.json({
+    const revenue = revenueResult.length > 0 ? revenueResult[0].total : 0;
+
+    const responseData = {
       totalVehicles,
       availableSlots,
       occupiedSlots,
       revenue,
       recentTransactions
-    });
+    };
+
+    statsCache = responseData;
+    statsCacheTime = now;
+
+    res.json(responseData);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
