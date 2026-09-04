@@ -43,9 +43,51 @@ const protect = async (req, res, next) => {
         .lean();
 
       if (!user && decodedToken.email) {
-        user = await User.findOne({ email: decodedToken.email })
+        user = await User.findOne({ email: decodedToken.email.toLowerCase() })
           .select('_id name email role status firebaseUid profilePicture')
           .lean();
+
+        if (user && !user.firebaseUid) {
+          await User.updateOne({ _id: user._id }, { firebaseUid: decodedToken.uid });
+          user.firebaseUid = decodedToken.uid;
+        }
+      }
+
+      // If user is still not found in MongoDB, auto-create & sync them immediately
+      if (!user && (decodedToken.uid || decodedToken.email)) {
+        const userEmail = (decodedToken.email || '').toLowerCase();
+        let role = decodedToken.role || 'Customer';
+
+        const adminEmails = (process.env.ADMIN_EMAILS || 'admin@zenpark.com')
+          .split(',')
+          .map(e => e.trim().toLowerCase())
+          .filter(e => e.length > 0);
+
+        if (userEmail.startsWith('admin') || adminEmails.includes(userEmail)) {
+          role = 'Admin';
+        } else if (userEmail.startsWith('valet')) {
+          role = 'Valet';
+        }
+
+        const newUser = await User.create({
+          name: decodedToken.name || (userEmail ? userEmail.split('@')[0] : 'Admin User'),
+          email: userEmail || `${decodedToken.uid}@zenpark.local`,
+          firebaseUid: decodedToken.uid,
+          authProvider: decodedToken.firebase?.sign_in_provider === 'google.com' ? 'Google' : 'Email',
+          role: role,
+          status: 'Active',
+          lastLogin: new Date()
+        });
+
+        user = {
+          _id: newUser._id,
+          name: newUser.name,
+          email: newUser.email,
+          role: newUser.role,
+          status: newUser.status,
+          firebaseUid: newUser.firebaseUid,
+          profilePicture: newUser.profilePicture
+        };
       }
 
       if (!user) {

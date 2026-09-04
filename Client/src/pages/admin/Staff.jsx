@@ -15,6 +15,7 @@ const AdminStaff = () => {
   const [editId, setEditId] = useState(null);
   const [formData, setFormData] = useState({ name: '', email: '', password: '', role: 'Valet', status: 'Active' });
   const [submitting, setSubmitting] = useState(false);
+  const [modalError, setModalError] = useState('');
 
   const fetchStaff = async () => {
     try {
@@ -27,13 +28,13 @@ const AdminStaff = () => {
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchStaff();
   }, []);
 
   const openAddModal = () => {
     setIsEditing(false);
     setEditId(null);
+    setModalError('');
     setFormData({ name: '', email: '', password: '', role: 'Valet', status: 'Active' });
     setShowModal(true);
   };
@@ -41,6 +42,7 @@ const AdminStaff = () => {
   const openEditModal = (user) => {
     setIsEditing(true);
     setEditId(user._id);
+    setModalError('');
     setFormData({ name: user.name, email: user.email, password: '', role: user.role, status: user.status || 'Active' });
     setShowModal(true);
   };
@@ -60,6 +62,7 @@ const AdminStaff = () => {
   const handleSubmitStaff = async (e) => {
     e.preventDefault();
     setSubmitting(true);
+    setModalError('');
     try {
       if (isEditing) {
         const dataToSend = { ...formData };
@@ -74,7 +77,7 @@ const AdminStaff = () => {
       fetchStaff();
     } catch (err) {
       console.error('Error saving staff', err);
-      alert(err.response?.data?.message || 'Error saving staff');
+      setModalError(err.response?.data?.message || 'Error saving staff');
     }
     setSubmitting(false);
   };
@@ -150,6 +153,11 @@ const AdminStaff = () => {
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <Card className="w-full max-w-md p-6">
             <h2 className="text-xl font-bold text-themeText mb-4">{isEditing ? 'Edit Staff' : 'Add New Staff'}</h2>
+            {modalError && (
+              <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl text-sm mb-4">
+                {modalError}
+              </div>
+            )}
             <form onSubmit={handleSubmitStaff} className="space-y-4" autoComplete="off">
               <Input
                 label="Name"

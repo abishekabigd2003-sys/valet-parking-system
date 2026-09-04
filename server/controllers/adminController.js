@@ -231,7 +231,15 @@ const createStaff = async (req, res) => {
           displayName: name,
         });
       } catch (fbError) {
-        return res.status(400).json({ message: fbError.message || 'Error creating Firebase user' });
+        if (fbError.code === 'auth/email-already-exists' || fbError.message?.includes('EMAIL_EXISTS') || fbError.message?.includes('already exists')) {
+          try {
+            firebaseUser = await firebaseAdmin.auth().getUserByEmail(email);
+          } catch (getErr) {
+            return res.status(400).json({ message: fbError.message || 'Error creating Firebase user' });
+          }
+        } else {
+          return res.status(400).json({ message: fbError.message || 'Error creating Firebase user' });
+        }
       }
     }
 
