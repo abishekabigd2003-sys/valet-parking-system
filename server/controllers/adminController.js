@@ -79,7 +79,25 @@ const getVehicles = async (req, res) => {
 // @access  Private/Admin
 const getSlots = async (req, res) => {
   try {
-    const slots = await ParkingSlot.find().sort({ floor: 1, slotNumber: 1 }).lean();
+    let slots = await ParkingSlot.find().sort({ floor: 1, slotNumber: 1 }).lean();
+    if (!slots || slots.length === 0) {
+      const slotsToSeed = [];
+      ['A', 'B'].forEach(zone => {
+        [1, 2].forEach(floor => {
+          for (let i = 1; i <= 10; i++) {
+            slotsToSeed.push({
+              slotNumber: `${zone}${floor}-${i.toString().padStart(2, '0')}`,
+              zone,
+              floor: floor.toString(),
+              vehicleType: i > 8 ? 'SUV' : (i > 6 ? 'Bike' : 'Car'),
+              status: 'Available'
+            });
+          }
+        });
+      });
+      await ParkingSlot.insertMany(slotsToSeed);
+      slots = await ParkingSlot.find().sort({ floor: 1, slotNumber: 1 }).lean();
+    }
     res.json(slots);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -416,6 +434,51 @@ const getTransactions = async (req, res) => {
   }
 };
 
+// @desc    Update tariff rates
+// @route   PUT /api/admin/tariffs/:id
+// @access  Private/Admin
+const updateTariff = async (req, res) => {
+  try {
+    const { hourlyRate, dailyRate } = req.body;
+    const tariff = await Tariff.findById(req.params.id);
+    if (!tariff) {
+      return res.status(404).json({ message: 'Tariff not found' });
+    }
+    if (hourlyRate !== undefined) tariff.hourlyRate = Number(hourlyRate);
+    if (dailyRate !== undefined) tariff.dailyRate = Number(dailyRate);
+    const updated = await tariff.save();
+    res.json(updated);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// @desc    Update parking slot status
+// @route   PUT /api/admin/slots/:id/status
+// @access  Private/Staff
+const updateSlotStatus = async (req, res) => {
+  try {
+    const { status } = req.body;
+    const slot = await ParkingSlot.findById(req.params.id);
+    if (!slot) {
+      return res.status(404).json({ message: 'Slot not found' });
+    }
+    slot.status = status;
+    await slot.save();
+
+    const io = req.app.get('io');
+    if (io) {
+      io.emit('slotUpdated', slot);
+      io.emit('statsUpdated');
+    }
+    statsCache = null;
+
+    res.json(slot);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   getStats,
   getVehicles,
@@ -431,5 +494,7 @@ module.exports = {
   deleteCustomer,
   getPayments,
   getTariffs,
+  updateTariff,
+  updateSlotStatus,
   getTransactions
 };

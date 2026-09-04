@@ -63,6 +63,45 @@ const connectDB = async () => {
     console.log(`✅ Connected to MongoDB (${conn.connection.host || 'localhost'})`);
     console.log(`📂 Database Name: ${conn.connection.name}`);
     console.log(`=========================================\n`);
+
+    // Ensure 40 standard parking slots and default tariffs exist
+    try {
+      const ParkingSlot = require('../models/ParkingSlot');
+      const Tariff = require('../models/Tariff');
+      
+      const slotCount = await ParkingSlot.countDocuments();
+      if (slotCount === 0) {
+        console.log('📦 Initializing 40 default parking slots...');
+        const slotsToSeed = [];
+        ['A', 'B'].forEach(zone => {
+          [1, 2].forEach(floor => {
+            for (let i = 1; i <= 10; i++) {
+              slotsToSeed.push({
+                slotNumber: `${zone}${floor}-${i.toString().padStart(2, '0')}`,
+                zone,
+                floor: floor.toString(),
+                vehicleType: i > 8 ? 'SUV' : (i > 6 ? 'Bike' : 'Car'),
+                status: 'Available'
+              });
+            }
+          });
+        });
+        await ParkingSlot.insertMany(slotsToSeed);
+        console.log('✅ Successfully auto-seeded 40 parking slots.');
+      }
+
+      const tariffCount = await Tariff.countDocuments();
+      if (tariffCount === 0) {
+        await Tariff.insertMany([
+          { vehicleType: 'Car', hourlyRate: 50, dailyRate: 500 },
+          { vehicleType: 'SUV', hourlyRate: 80, dailyRate: 800 },
+          { vehicleType: 'Bike', hourlyRate: 20, dailyRate: 200 }
+        ]);
+        console.log('✅ Successfully initialized default tariffs.');
+      }
+    } catch (seedErr) {
+      console.warn('⚠️  Auto-seed check warning:', seedErr.message);
+    }
   } catch (error) {
     console.error('\n=========================================');
     console.error('❌ MONGODB CONNECTION ERROR');

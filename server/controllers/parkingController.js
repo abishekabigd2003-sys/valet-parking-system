@@ -131,13 +131,15 @@ const getAvailableSlots = async (req, res) => {
 // @access  Private
 const searchVehicle = async (req, res) => {
   const { q } = req.query;
-  const queryUpper = q ? q.toUpperCase() : '';
+  const rawQuery = (q || '').trim();
+  const queryUpper = rawQuery.toUpperCase();
 
   try {
     let transaction = await ParkingTransaction.findOne({ ticketNumber: queryUpper })
       .populate('vehicleId')
       .populate('customerId')
       .populate('slotId')
+      .populate('valetStaffId')
       .lean();
 
     // If not found by ticket, try vehicle number
@@ -148,6 +150,21 @@ const searchVehicle = async (req, res) => {
           .populate('vehicleId')
           .populate('customerId')
           .populate('slotId')
+          .populate('valetStaffId')
+          .lean();
+      }
+    }
+
+    // If still not found, try customer mobile number
+    if (!transaction) {
+      const customer = await Customer.findOne({ mobileNumber: rawQuery }).lean();
+      if (customer) {
+        transaction = await ParkingTransaction.findOne({ customerId: customer._id, status: { $ne: 'Completed' } })
+          .populate('vehicleId')
+          .populate('customerId')
+          .populate('slotId')
+          .populate('valetStaffId')
+          .sort({ createdAt: -1 })
           .lean();
       }
     }
@@ -204,16 +221,19 @@ const checkOutVehicle = async (req, res) => {
       return res.status(400).json({ message: 'Vehicle already retrieved, pending payment.' });
     }
 
-    // Free the parking slot
-    const slot = await ParkingSlot.findById(transaction.slotId._id);
-    if (slot) {
-      slot.status = 'Available';
-      await slot.save();
-      
-      const io = req.app.get('io');
-      if (io) {
-        io.emit('slotUpdated', slot);
-        io.emit('statsUpdated');
+    // Free the parking slot safely
+    const slotId = transaction.slotId?._id || transaction.slotId;
+    if (slotId) {
+      const slot = await ParkingSlot.findById(slotId);
+      if (slot) {
+        slot.status = 'Available';
+        await slot.save();
+        
+        const io = req.app.get('io');
+        if (io) {
+          io.emit('slotUpdated', slot);
+          io.emit('statsUpdated');
+        }
       }
     }
 
@@ -222,12 +242,11 @@ const checkOutVehicle = async (req, res) => {
 
     // Calculate fee
     const hours = Math.max(1, Math.ceil((transaction.checkOutTime - transaction.checkInTime) / (1000 * 60 * 60)));
-    
-    const tariff = await Tariff.findOne({ vehicleType: transaction.vehicleId.vehicleType });
+    const vehicleType = transaction.vehicleId?.vehicleType || 'Car';
+    const tariff = await Tariff.findOne({ vehicleType });
     let fee = 0;
     
     if (tariff) {
-      // Basic logic: if > 24 hours use daily rate + hourly rate for remainder
       const days = Math.floor(hours / 24);
       const remainingHours = hours % 24;
       fee = (days * tariff.dailyRate) + (remainingHours * tariff.hourlyRate);

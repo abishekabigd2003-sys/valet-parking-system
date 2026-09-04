@@ -91,8 +91,8 @@ const AdminReports = () => {
               {stats?.recentTransactions?.map(tx => (
                 <tr key={tx._id} className="hover:bg-themeBg transition-colors">
                   <td className="px-4 py-3 font-mono text-sm text-themeText-secondary">{tx.ticketNumber}</td>
-                  <td className="px-4 py-3 text-themeText font-bold">{tx.vehicleId?.licensePlate}</td>
-                  <td className="px-4 py-3 text-themeText-secondary">{tx.customerId?.name}</td>
+                  <td className="px-4 py-3 text-themeText font-bold uppercase">{tx.vehicleId?.vehicleNumber || tx.vehicleId?.licensePlate || 'N/A'}</td>
+                  <td className="px-4 py-3 text-themeText-secondary">{tx.customerId?.name || 'Walk-in'}</td>
                   <td className="px-4 py-3">
                     <span className={`px-2 py-1 rounded text-xs font-bold ${
                       tx.status === 'Completed' ? 'bg-green-500/20 text-green-500' : 'bg-blue-500/20 text-blue-500'

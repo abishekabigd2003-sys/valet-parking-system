@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
 const { protect, admin, staff } = require('../middleware/authMiddleware');
-const { getStats, getVehicles, getSlots, getStaff, createStaff, updateStaff, deleteStaff, seedSlots, getCustomers, createCustomer, updateCustomer, deleteCustomer, getPayments, getTariffs, getTransactions } = require('../controllers/adminController');
+const { getStats, getVehicles, getSlots, getStaff, createStaff, updateStaff, deleteStaff, seedSlots, getCustomers, createCustomer, updateCustomer, deleteCustomer, getPayments, getTariffs, updateTariff, updateSlotStatus, getTransactions } = require('../controllers/adminController');
 
 router.route('/stats').get(protect, staff, getStats);
 router.route('/vehicles').get(protect, staff, getVehicles);
 router.route('/slots').get(protect, staff, getSlots);
+router.route('/slots/:id/status').put(protect, staff, updateSlotStatus);
 router.route('/staff')
   .get(protect, admin, getStaff)
   .post(protect, admin, createStaff);
@@ -21,6 +22,7 @@ router.route('/customers/:id')
 router.route('/payments').get(protect, admin, getPayments);
 router.route('/transactions').get(protect, admin, getTransactions);
 router.route('/tariffs').get(protect, staff, getTariffs);
+router.route('/tariffs/:id').put(protect, admin, updateTariff);
 router.route('/seed-slots').post(protect, staff, seedSlots);
 
 module.exports = router;

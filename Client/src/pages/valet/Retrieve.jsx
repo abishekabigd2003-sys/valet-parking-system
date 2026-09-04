@@ -15,6 +15,7 @@ const ValetRetrieve = () => {
   const [error, setError] = useState('');
   const [paymentMode, setPaymentMode] = useState('Cash');
   const [scanning, setScanning] = useState(false);
+  const [showReceiptModal, setShowReceiptModal] = useState(false);
 
   useEffect(() => {
     let scanner = null;
@@ -231,14 +232,78 @@ const ValetRetrieve = () => {
                   </Button>
                 </div>
               ) : (
-                <div className="bg-green-500/10 border border-green-500/50 rounded-lg p-4 flex flex-col items-center justify-center text-green-500">
-                  <CheckCircle className="w-8 h-8 mb-2" />
-                  <p className="font-bold">Payment Completed</p>
-                  <p className="text-sm mt-2 text-center text-green-400">Transaction is fully completed. Vehicle returned to owner.</p>
+                <div className="space-y-4">
+                  <div className="bg-green-500/10 border border-green-500/50 rounded-lg p-4 flex flex-col items-center justify-center text-green-500">
+                    <CheckCircle className="w-8 h-8 mb-2" />
+                    <p className="font-bold">Payment Completed</p>
+                    <p className="text-sm mt-1 text-center text-green-400">Transaction is fully completed. Vehicle returned to owner.</p>
+                  </div>
+                  <Button 
+                    onClick={() => setShowReceiptModal(true)} 
+                    className="w-full bg-primary text-black font-bold flex items-center justify-center gap-2"
+                  >
+                    View & Print Official Receipt
+                  </Button>
                 </div>
               )}
             </Card>
           )}
+        </div>
+      )}
+
+      {/* Receipt Modal */}
+      {showReceiptModal && transaction && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+          <Card className="max-w-md w-full p-6 bg-white text-gray-900 border border-gray-200 shadow-2xl rounded-2xl space-y-4 print:p-0 print:border-0">
+            <div className="text-center border-b border-gray-200 pb-4">
+              <h2 className="text-2xl font-black tracking-tight text-gray-900">ZEN PARK</h2>
+              <p className="text-xs text-gray-500 uppercase tracking-widest font-bold mt-0.5">Official Parking Receipt</p>
+            </div>
+
+            <div className="space-y-2 text-sm">
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <span className="text-gray-500">Ticket Number:</span>
+                <span className="font-mono font-bold text-gray-900">{transaction.ticketNumber}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <span className="text-gray-500">Vehicle:</span>
+                <span className="font-bold text-gray-900 uppercase">{transaction.vehicleId?.vehicleNumber} ({transaction.vehicleId?.vehicleType})</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <span className="text-gray-500">Customer:</span>
+                <span className="font-semibold text-gray-900">{transaction.customerId?.name} ({transaction.customerId?.mobileNumber})</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <span className="text-gray-500">Slot Assigned:</span>
+                <span className="font-semibold text-gray-900">Floor {transaction.slotId?.floor} - {transaction.slotId?.slotNumber}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <span className="text-gray-500">Check-In:</span>
+                <span className="font-medium text-gray-800">{moment(transaction.checkInTime).format('DD/MM/YYYY hh:mm A')}</span>
+              </div>
+              <div className="flex justify-between py-1 border-b border-gray-100">
+                <span className="text-gray-500">Check-Out:</span>
+                <span className="font-medium text-gray-800">{moment(transaction.checkOutTime || new Date()).format('DD/MM/YYYY hh:mm A')}</span>
+              </div>
+              <div className="flex justify-between py-2 border-t-2 border-gray-900 text-base font-black">
+                <span>Total Paid ({paymentMode}):</span>
+                <span className="text-primary text-xl">₹{transaction.feeCalculated}</span>
+              </div>
+            </div>
+
+            <div className="text-center text-xs text-gray-400 pt-2 border-t border-gray-100">
+              Thank you for parking with us! Have a safe trip.
+            </div>
+
+            <div className="flex gap-3 pt-2 print:hidden">
+              <Button variant="ghost" onClick={() => setShowReceiptModal(false)} className="flex-1 text-gray-700 hover:bg-gray-100">
+                Close
+              </Button>
+              <Button onClick={() => window.print()} className="flex-1 bg-gray-900 text-white hover:bg-black font-bold">
+                Print
+              </Button>
+            </div>
+          </Card>
         </div>
       )}
     </div>

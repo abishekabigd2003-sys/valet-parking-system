@@ -34,44 +34,33 @@ export const AuthProvider = ({ children }) => {
     }
   });
 
-  // Set initial token if it exists
   useEffect(() => {
+    // Fast initial check - if token is present, ensure headers are configured
     const token = localStorage.getItem('token');
     if (token) {
       api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
     }
-  }, []);
-
-  useEffect(() => {
-    // Safety timeout: Ensure app never waits for Firebase network longer than 1.2s
-    const safetyTimer = setTimeout(() => {
-      setLoading(false);
-    }, 1200);
 
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      clearTimeout(safetyTimer);
       if (firebaseUser) {
-        // Refresh token on state change to ensure backend gets a valid token
-        const idToken = await firebaseUser.getIdToken();
-        api.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
-        localStorage.setItem('token', idToken);
-      } else {
-        // Check if we have a mock token before clearing everything!
-        const token = localStorage.getItem('token');
-        if (token && token.startsWith('mock.')) {
-           // It's an E2E mock token, don't clear the user!
-        } else {
-           setUser(null);
-           localStorage.removeItem('userInfo');
-           localStorage.removeItem('token');
-           delete api.defaults.headers.common['Authorization'];
+        try {
+          const idToken = await firebaseUser.getIdToken();
+          api.defaults.headers.common['Authorization'] = `Bearer ${idToken}`;
+          localStorage.setItem('token', idToken);
+        } catch (tokErr) {
+          console.warn('Error refreshing id token:', tokErr);
         }
       }
       setLoading(false);
     });
 
+    // Fallback timer to ensure loading is never stuck
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 400);
+
     return () => {
-      clearTimeout(safetyTimer);
+      clearTimeout(timer);
       unsubscribe();
     };
   }, []);

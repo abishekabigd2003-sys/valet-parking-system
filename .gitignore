@@ -5,15 +5,20 @@ server/node_modules/
 
 # Environment Variables & Secrets
 .env
-.env*
+.env.*
 *.env
 *.env.*
 .env.local
 .env.development
 .env.production
 .env.test
-Client/.env*
-server/.env*
+Client/.env
+Client/.env.*
+server/.env
+server/.env.*
+!.env.example
+!Client/.env.example
+!server/.env.example
 
 # Test Results & Reports
 test-results/
