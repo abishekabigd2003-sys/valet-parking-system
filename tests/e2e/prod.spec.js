@@ -1,5 +1,7 @@
 const { test, expect } = require('@playwright/test');
 
+const BASE_URL = process.env.PROD_URL || 'http://localhost:5173';
+
 // We use test.describe.serial because we are seeding data sequentially
 test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
@@ -34,9 +36,17 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
     { num: `P-S0-${ts}`, type: 'SUV', make: 'Volvo' }
   ];
 
+  test.beforeEach(async ({ page }) => {
+    await page.goto(`${BASE_URL}/`);
+    await page.evaluate(() => {
+      localStorage.clear();
+      sessionStorage.clear();
+    }).catch(() => {});
+  });
+
   // 1. Admin Login & Dashboard Verification
   test('Scenario 1: Admin Login & Dashboard Verification', async ({ page }) => {
-    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', 'admin_prod@e2e.test');
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');
@@ -60,7 +70,7 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
   // 1.5 Clean up existing demo data
   test('Scenario 1.5: Clean up existing demo data', async ({ page }) => {
-    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', 'admin_prod@e2e.test');
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');
@@ -93,7 +103,7 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
   // 2. Admin creates 5 Demo Valet Staff
   test('Scenario 2: Admin creates 5 Demo Valet Staff', async ({ page }) => {
-    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', 'admin_prod@e2e.test');
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');
@@ -119,7 +129,7 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
   // 3. Admin creates 5 Demo Customers
   test('Scenario 3: Admin creates 5 Demo Customers', async ({ page }) => {
-    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', 'admin_prod@e2e.test');
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');
@@ -145,7 +155,7 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
   // 3.5. Admin Edit & Delete Customer
   test('Scenario 3.5: Admin Edit & Delete Customer Verification', async ({ page }) => {
-    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', 'admin_prod@e2e.test');
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');
@@ -181,7 +191,7 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
   // 4. Admin Edit & Delete Staff
   test('Scenario 4: Admin Edit & Delete Staff Verification', async ({ page }) => {
-    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', 'admin_prod@e2e.test');
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');
@@ -215,7 +225,7 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
   // 5. Customer Login & Dashboard
   test('Scenario 5: Customer Login & Dashboard', async ({ page }) => {
-    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', customers[0].email);
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');
@@ -227,7 +237,7 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
   // 6. Valet checks in 10 Demo Vehicles
   test('Scenario 6: Valet checks in 10 Demo Vehicles', async ({ page }) => {
     test.setTimeout(60000); // 60 seconds timeout since it loops 10 times
-    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', valets[0].email);
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');
@@ -259,7 +269,7 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
   // 7. Valet checks out a vehicle and processes payment
   test('Scenario 7: Valet checks out a vehicle and processes payment', async ({ page }) => {
-    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', valets[0].email);
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');
@@ -286,7 +296,7 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
   // 8. Valet errors out on invalid ticket retrieval
   test('Scenario 8: Valet errors out on invalid ticket retrieval', async ({ page }) => {
-    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', valets[1].email);
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');
@@ -303,7 +313,7 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
 
   // 9. Admin verifies reports and database consistency
   test('Scenario 9: Admin verifies reports and database consistency', async ({ page }) => {
-    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', 'admin_prod@e2e.test');
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');
@@ -325,7 +335,7 @@ test.describe.serial('Valet Parking System - Production E2E Suite', () => {
   // 10. Role-Based Access Control Enforcement
   test('Scenario 10: Role-Based Access Control Enforcement', async ({ page }) => {
     // Login as Customer
-    await page.goto('https://valet-parking-system-qtci.onrender.com/login');
+    await page.goto(`${BASE_URL}/login`);
     await page.fill('input[type="email"]', customers[0].email);
     await page.fill('input[type="password"]', 'password123');
     await page.click('button[type="submit"]');

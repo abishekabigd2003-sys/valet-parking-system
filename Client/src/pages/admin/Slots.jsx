@@ -26,6 +26,7 @@ const AdminSlots = () => {
   const navigate = useNavigate();
   const [slots, setSlots] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   // Filter States
   const [statusFilter, setStatusFilter] = useState('All');
@@ -43,11 +44,14 @@ const AdminSlots = () => {
 
   const fetchSlots = async () => {
     setLoading(true);
+    setError('');
     try {
       const { data } = await api.get('/admin/slots');
       setSlots(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching slots', err);
+      setError(err.response?.data?.message || err.message || 'Error loading parking slots');
+      setSlots([]);
     } finally {
       setLoading(false);
     }
@@ -55,6 +59,7 @@ const AdminSlots = () => {
 
   const seedSlots = async () => {
     setLoading(true);
+    setError('');
     try {
       const { data } = await api.post('/admin/seed-slots');
       if (data.slots && Array.isArray(data.slots)) {
@@ -311,6 +316,16 @@ const AdminSlots = () => {
           </button>
         )}
       </div>
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl flex items-center justify-between">
+          <p className="text-sm font-medium">{error}</p>
+          <div className="flex gap-2">
+            <Button size="sm" variant="secondary" onClick={fetchSlots}>Retry</Button>
+            <Button size="sm" className="bg-primary text-black" onClick={seedSlots}>Initialize 40 Slots</Button>
+          </div>
+        </div>
+      )}
 
       {/* Grid of 40 Slots */}
       {loading ? (

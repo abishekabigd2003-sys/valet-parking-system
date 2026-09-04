@@ -39,9 +39,12 @@ const connectDB = async () => {
       conn = await mongoose.connect(uri, {
         serverSelectionTimeoutMS: 5000,
         socketTimeoutMS: 45000,
+        connectTimeoutMS: 10000,
         family: 4,
-        maxPoolSize: 20,
+        maxPoolSize: 25,
         minPoolSize: 5,
+        maxIdleTimeMS: 30000,
+        autoIndex: true, // Build defined indexes on startup
       });
     } catch (connErr) {
       if (process.env.NODE_ENV !== 'production' && !uri.includes('127.0.0.1')) {

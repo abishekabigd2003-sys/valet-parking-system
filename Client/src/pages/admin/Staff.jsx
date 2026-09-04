@@ -10,6 +10,7 @@ import { ExportButton } from '../../components/ExportButton';
 const AdminStaff = () => {
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -18,13 +19,18 @@ const AdminStaff = () => {
   const [modalError, setModalError] = useState('');
 
   const fetchStaff = async () => {
+    setLoading(true);
+    setError('');
     try {
       const { data } = await api.get('/admin/staff');
-      setStaff(data);
+      setStaff(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching staff', err);
+      setError(err.response?.data?.message || err.message || 'Error fetching staff list');
+      setStaff([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
@@ -78,11 +84,10 @@ const AdminStaff = () => {
     } catch (err) {
       console.error('Error saving staff', err);
       setModalError(err.response?.data?.message || 'Error saving staff');
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
-
-  if (loading) return <div className="text-themeText">Loading staff...</div>;
 
   return (
     <div className="space-y-6 relative">
@@ -93,12 +98,19 @@ const AdminStaff = () => {
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <Button onClick={fetchStaff} variant="secondary" className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4" /> Refresh
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </Button>
           <ExportButton data={staff} filename="Staff_Report" />
           <Button onClick={openAddModal}>+ Add Staff</Button>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl flex items-center justify-between">
+          <p className="text-sm font-medium">{error}</p>
+          <Button size="sm" variant="secondary" onClick={fetchStaff}>Retry</Button>
+        </div>
+      )}
 
       <Card className="overflow-hidden p-0">
         <div className="overflow-x-auto">
@@ -114,34 +126,46 @@ const AdminStaff = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-themeBorder">
-              {staff.map(user => (
-                <tr key={user._id} className="hover:bg-themeBg transition-colors">
-                  <td className="px-6 py-4 font-bold text-themeText">{user.name}</td>
-                  <td className="px-6 py-4 text-themeText-secondary">{user.email}</td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded text-xs font-bold ${
-                      user.role === 'Admin' ? 'bg-purple-500/20 text-purple-500' : 'bg-blue-500/20 text-blue-500'
-                    }`}>{user.role}</span>
-                  </td>
-                  <td className="px-6 py-4">
-                    <span className={`px-2 py-1 rounded text-xs font-bold ${
-                      user.status === 'Active' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
-                    }`}>{user.status}</span>
-                  </td>
-                  <td className="px-6 py-4 text-themeText-secondary text-sm">{moment(user.createdAt).format('MMM DD, YYYY')}</td>
-                  <td className="px-6 py-4 flex gap-2">
-                    <button onClick={() => openEditModal(user)} className="text-themeText-secondary hover:text-themeText transition-colors" title="Edit">
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDeleteStaff(user._id)} className="text-themeText-secondary hover:text-red-500 transition-colors" title="Delete">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan="6" className="px-6 py-12 text-center text-themeText-secondary">
+                    <div className="flex items-center justify-center gap-2">
+                      <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+                      <span>Loading staff...</span>
+                    </div>
                   </td>
                 </tr>
-              ))}
-              {staff.length === 0 && (
+              ) : staff.length > 0 ? (
+                staff.map(user => (
+                  <tr key={user._id} className="hover:bg-themeBg transition-colors">
+                    <td className="px-6 py-4 font-bold text-themeText">{user.name}</td>
+                    <td className="px-6 py-4 text-themeText-secondary">{user.email}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                        user.role === 'Admin' ? 'bg-purple-500/20 text-purple-500' : 'bg-blue-500/20 text-blue-500'
+                      }`}>{user.role}</span>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 rounded text-xs font-bold ${
+                        user.status === 'Active' ? 'bg-green-500/20 text-green-500' : 'bg-red-500/20 text-red-500'
+                      }`}>{user.status}</span>
+                    </td>
+                    <td className="px-6 py-4 text-themeText-secondary text-sm">{moment(user.createdAt).format('MMM DD, YYYY')}</td>
+                    <td className="px-6 py-4 flex gap-2">
+                      <button onClick={() => openEditModal(user)} className="text-themeText-secondary hover:text-themeText transition-colors" title="Edit">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDeleteStaff(user._id)} className="text-themeText-secondary hover:text-red-500 transition-colors" title="Delete">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <td colSpan="6" className="px-6 py-8 text-center text-themeText-secondary">No staff found.</td>
+                  <td colSpan="6" className="px-6 py-8 text-center text-themeText-secondary">
+                    {error ? 'Unable to display staff. Please retry.' : 'No staff found.'}
+                  </td>
                 </tr>
               )}
             </tbody>

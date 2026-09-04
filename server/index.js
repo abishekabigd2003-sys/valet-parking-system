@@ -68,10 +68,17 @@ app.use(compression());
 
 // Fast health check endpoint (bypasses rate limit)
 app.get('/api/health', (req, res) => {
+  const mongoose = require('mongoose');
+  const dbState = mongoose.connection.readyState;
+  const dbStatusMap = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+  
   res.status(200).json({
     status: 'ok',
-    uptime: process.uptime(),
-    timestamp: new Date().toISOString()
+    database: dbStatusMap[dbState] || 'unknown',
+    databaseConnected: dbState === 1,
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 app.get('/ping', (req, res) => res.status(200).send('pong'));

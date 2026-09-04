@@ -12,12 +12,15 @@ const syncUser = async (req, res) => {
   }
 
   try {
-    // Verify the Firebase token
+    // Verify the Firebase token with fast timeout
     let decodedToken;
     try {
-      decodedToken = await admin.auth().verifyIdToken(idToken);
+      decodedToken = await Promise.race([
+        admin.auth().verifyIdToken(idToken),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('verifyIdToken timeout')), 2500))
+      ]);
     } catch(verifyErr) {
-      console.warn('Firebase verifyIdToken failed, falling back to manual decode:', verifyErr.message);
+      console.warn('Firebase verifyIdToken fallback:', verifyErr.message);
       const payloadBase64 = idToken.split('.')[1];
       const decodedJson = Buffer.from(payloadBase64, 'base64').toString();
       decodedToken = JSON.parse(decodedJson);

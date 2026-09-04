@@ -3,7 +3,17 @@ const User = require('../models/User');
 
 // In-memory token cache to prevent redundant Firebase & Mongo roundtrips on every request
 const tokenCache = new Map();
-const CACHE_TTL_MS = 2 * 60 * 1000; // 2 minutes
+const CACHE_TTL_MS = 10 * 60 * 1000; // 10 minutes cache
+
+// Fast timeout wrapper to prevent remote Firebase auth network latency from blocking requests
+const verifyFirebaseTokenWithTimeout = (token, timeoutMs = 2500) => {
+  return Promise.race([
+    firebaseAdmin.auth().verifyIdToken(token),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('Firebase verifyIdToken timed out')), timeoutMs)
+    )
+  ]);
+};
 
 const protect = async (req, res, next) => {
   let token;
@@ -22,10 +32,10 @@ const protect = async (req, res, next) => {
         return next();
       }
 
-      // Verify the Firebase ID Token
+      // Verify the Firebase ID Token with fast timeout
       let decodedToken;
       try {
-        decodedToken = await firebaseAdmin.auth().verifyIdToken(token);
+        decodedToken = await verifyFirebaseTokenWithTimeout(token, 2500);
       } catch (verifyErr) {
         const payloadBase64 = token.split('.')[1];
         if (payloadBase64) {

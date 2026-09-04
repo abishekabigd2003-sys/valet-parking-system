@@ -29,5 +29,9 @@ const vehicleSchema = mongoose.Schema(
   }
 );
 
+vehicleSchema.index({ customerId: 1 });
+vehicleSchema.index({ vehicleType: 1 });
+vehicleSchema.index({ createdAt: -1 });
+
 const Vehicle = mongoose.model('Vehicle', vehicleSchema);
 module.exports = Vehicle;

@@ -10,6 +10,7 @@ import { Edit2, Trash2, RefreshCw } from 'lucide-react';
 const AdminCustomers = () => {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState(null);
@@ -17,17 +18,21 @@ const AdminCustomers = () => {
   const [submitting, setSubmitting] = useState(false);
 
   const fetchCustomers = async () => {
+    setLoading(true);
+    setError('');
     try {
       const { data } = await api.get('/admin/customers');
-      setCustomers(data);
+      setCustomers(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error('Error fetching customers', err);
+      setError(err.response?.data?.message || err.message || 'Error fetching customers');
+      setCustomers([]);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchCustomers();
   }, []);
 
@@ -72,11 +77,10 @@ const AdminCustomers = () => {
     } catch (err) {
       console.error('Error saving customer', err);
       alert(err.response?.data?.message || 'Error saving customer');
+    } finally {
+      setSubmitting(false);
     }
-    setSubmitting(false);
   };
-
-  if (loading) return <div className="text-themeText">Loading customers...</div>;
 
   return (
     <div className="space-y-6 relative">
@@ -87,12 +91,19 @@ const AdminCustomers = () => {
         </div>
         <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
           <Button onClick={fetchCustomers} variant="secondary" className="flex items-center gap-2">
-            <RefreshCw className="w-4 h-4" /> Refresh
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} /> Refresh
           </Button>
           <ExportButton data={customers} filename="Customers_Report" />
           <Button onClick={openAddModal}>+ Add Customer</Button>
         </div>
       </div>
+
+      {error && (
+        <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-4 rounded-xl flex items-center justify-between">
+          <p className="text-sm font-medium">{error}</p>
+          <Button size="sm" variant="secondary" onClick={fetchCustomers}>Retry</Button>
+        </div>
+      )}
 
       <Card className="overflow-hidden p-0">
         <div className="overflow-x-auto">
@@ -107,25 +118,37 @@ const AdminCustomers = () => {
               </tr>
             </thead>
             <tbody className="divide-y divide-themeBorder">
-              {customers.map(customer => (
-                <tr key={customer._id} className="hover:bg-themeBg transition-colors">
-                  <td className="px-6 py-4 font-bold text-themeText">{customer.name}</td>
-                  <td className="px-6 py-4 text-themeText-secondary">{customer.mobileNumber}</td>
-                  <td className="px-6 py-4 text-themeText-secondary">{customer.email || 'N/A'}</td>
-                  <td className="px-6 py-4 text-themeText-secondary text-sm">{moment(customer.createdAt).format('MMM DD, YYYY')}</td>
-                  <td className="px-6 py-4 flex gap-2">
-                    <button onClick={() => openEditModal(customer)} className="text-themeText-secondary hover:text-themeText transition-colors" title="Edit">
-                      <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button onClick={() => handleDeleteCustomer(customer._id)} className="text-themeText-secondary hover:text-red-500 transition-colors" title="Delete">
-                      <Trash2 className="w-4 h-4" />
-                    </button>
+              {loading ? (
+                <tr>
+                  <td colSpan="5" className="px-6 py-12 text-center text-themeText-secondary">
+                    <div className="flex items-center justify-center gap-2">
+                      <RefreshCw className="w-5 h-5 animate-spin text-primary" />
+                      <span>Loading customers...</span>
+                    </div>
                   </td>
                 </tr>
-              ))}
-              {customers.length === 0 && (
+              ) : customers.length > 0 ? (
+                customers.map(customer => (
+                  <tr key={customer._id} className="hover:bg-themeBg transition-colors">
+                    <td className="px-6 py-4 font-bold text-themeText">{customer.name}</td>
+                    <td className="px-6 py-4 text-themeText-secondary">{customer.mobileNumber}</td>
+                    <td className="px-6 py-4 text-themeText-secondary">{customer.email || 'N/A'}</td>
+                    <td className="px-6 py-4 text-themeText-secondary text-sm">{moment(customer.createdAt).format('MMM DD, YYYY')}</td>
+                    <td className="px-6 py-4 flex gap-2">
+                      <button onClick={() => openEditModal(customer)} className="text-themeText-secondary hover:text-themeText transition-colors" title="Edit">
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button onClick={() => handleDeleteCustomer(customer._id)} className="text-themeText-secondary hover:text-red-500 transition-colors" title="Delete">
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
-                  <td colSpan="5" className="px-6 py-8 text-center text-themeText-secondary">No customers found.</td>
+                  <td colSpan="5" className="px-6 py-8 text-center text-themeText-secondary">
+                    {error ? 'Unable to display customers. Please retry.' : 'No customers found.'}
+                  </td>
                 </tr>
               )}
             </tbody>
