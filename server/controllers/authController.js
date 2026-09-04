@@ -21,7 +21,8 @@ const syncUser = async (req, res) => {
       const payloadBase64 = idToken.split('.')[1];
       const decodedJson = Buffer.from(payloadBase64, 'base64').toString();
       decodedToken = JSON.parse(decodedJson);
-      decodedToken.uid = decodedToken.uid || decodedToken.user_id;
+      decodedToken.uid = decodedToken.uid || decodedToken.user_id || decodedToken.sub || decodedToken.email;
+      decodedToken.email = decodedToken.email || decodedToken.firebase?.identities?.email?.[0] || '';
       decodedToken.sign_in_provider = decodedToken.firebase?.sign_in_provider;
     }
     const { uid, email, picture, name: googleName, sign_in_provider } = decodedToken;

@@ -31,7 +31,8 @@ const protect = async (req, res, next) => {
         if (payloadBase64) {
           const decodedJson = Buffer.from(payloadBase64, 'base64').toString();
           decodedToken = JSON.parse(decodedJson);
-          decodedToken.uid = decodedToken.uid || decodedToken.user_id;
+          decodedToken.uid = decodedToken.uid || decodedToken.user_id || decodedToken.sub || decodedToken.email;
+          decodedToken.email = decodedToken.email || decodedToken.firebase?.identities?.email?.[0] || '';
         } else {
           throw verifyErr;
         }
